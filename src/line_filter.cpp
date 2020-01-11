@@ -10,7 +10,7 @@ namespace lm {
 
     }
 
-    LmStatus LineFilter::filterByLine(Mat& imgIn, Mat& imgOut, KeyLinesIn lines,  const int lineThickness) {
+    LmStatus LineFilter::filterByLine(const Mat& imgIn, Mat& imgOut, KeyLinesIn lines,  const int lineThickness) {
         Mat mask = Mat::zeros(imgIn.size(), CV_8UC1);
 
         // Paint every line in lines on to the mask as 0xff to prepare for bitwise_and

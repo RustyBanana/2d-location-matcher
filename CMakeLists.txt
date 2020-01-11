@@ -42,9 +42,19 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
 
+add_library(lm_utils src/utils.cpp)
+target_link_libraries(lm_utils
+  ${OpenCV_LIBS}
+)
+
 add_library(line_detector src/line_detector.cpp)
 target_link_libraries(line_detector
     ${OpenCV_LIBS}
+)
+
+add_library(line_filter src/line_filter.cpp)
+target_link_libraries(line_filter
+  ${OpenCV_LIBS}
 )
 
 ## === Tests === 
@@ -52,6 +62,15 @@ target_link_libraries(line_detector
 add_executable(line_detector_test test/line_detector_test.cpp)
 target_link_libraries(line_detector_test
   line_detector
+  lm_utils
   gtest_main
 )
 add_test(NAME lineDetectorTest COMMAND line_detector_test)
+
+add_executable(line_filter_test test/line_filter_test.cpp)
+target_link_libraries(line_filter_test
+  line_filter
+  lm_utils
+  gtest_main
+)
+add_test(NAME lineFilterTest COMMAND line_filter_test)

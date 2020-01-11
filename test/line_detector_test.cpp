@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "location_matcher/utils.hpp"
 #include "location_matcher/line_detector.hpp"
 
 using namespace testing;
@@ -12,20 +13,6 @@ namespace lm {
     const float LENGTH_TOLERANCE = 5;
     const float ANGLE_TOLERANCE = M_PI * 10/180;
     const float POSITION_TOLERANCE = 3;
-
-    KeyLine getKeyLine(float startX, float startY, float endX, float endY) {
-        KeyLine kl;
-
-        kl.startPointX  = startX;
-        kl.startPointY  = startY;
-        kl.endPointX    = endX;
-        kl.endPointY    = endY;
-        Point2f klVec = kl.getEndPoint() - kl.getStartPoint();
-        kl.angle        = atan2(klVec.y, klVec.x);
-        kl.lineLength   = sqrt(klVec.dot(klVec));
-
-        return kl;
-    }
 
     class LineDetectorTest : public ::testing::Test{
         public:

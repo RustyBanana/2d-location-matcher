@@ -1,3 +1,5 @@
+#pragma once
+
 #include <opencv2/core.hpp>
 #include <opencv2/line_descriptor.hpp>
 

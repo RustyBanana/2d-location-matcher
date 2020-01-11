@@ -11,7 +11,7 @@
 
 #include "location_matcher/core.hpp"
 
-// #define USE_LSD_DETECTOR
+#define USE_LSD_DETECTOR
 
 namespace lm {
 
@@ -29,11 +29,11 @@ namespace lm {
         LmStatus detect(const cv::Mat& imgIn, KeyLinesOut lines, const cv::Mat& mask);
 
         private:
-#ifdef USE_LS_DETECTOR
-        cv::line_descriptor::BinaryDescriptor::Params bdParams_;
-        cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;
-#else
+#ifdef USE_LSD_DETECTOR
         cv::Ptr<cv::line_descriptor::LSDDetector> lineDetector_;
+#else
+        cv::line_descriptor::BinaryDescriptor::Params bdParams_;
+        cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;        
 #endif
     };
 

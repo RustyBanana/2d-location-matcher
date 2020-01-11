@@ -13,7 +13,7 @@ namespace lm {
         LineFilter(double minLineLength, double maxLineLength);
         ~LineFilter();
 
-        LmStatus filterByLine(Mat& imgIn, Mat& imgOut, KeyLinesIn lines,  const int lineThickness);
+        LmStatus filterByLine(const cv::Mat& imgIn, cv::Mat& imgOut, KeyLinesIn lines,  const int lineThickness);
 
         void setMinLineLength(double minLength);
         void setMaxLineLength(double maxLength);
