@@ -41,8 +41,8 @@ namespace lm {
         void SetUp() override {
             ld = new LineDetector();
 
-            testImg1_ = imread("line-detector-test-1.jpg", IMREAD_GRAYSCALE);
-            testImg2_ = imread("line-detector-test-2.jpg", IMREAD_GRAYSCALE);
+            testImg1_ = imread("test/line-detector-test-1.jpg", IMREAD_GRAYSCALE);
+            testImg2_ = imread("test/line-detector-test-2.jpg", IMREAD_GRAYSCALE);
 
             lines1_.push_back(getKeyLine(14, 33, 47, 33));
             lines1_.push_back(getKeyLine(72, 44, 72 ,77));
@@ -87,6 +87,7 @@ namespace lm {
 
     // === LINE DETECTOR TESTS ===
     TEST_F(LineDetectorTest, unconnectedLinesUnmasked) {
+
         KeyLines lines;
         ld->detect(testImg1_, lines);
 
