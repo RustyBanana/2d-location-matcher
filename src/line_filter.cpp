@@ -29,7 +29,8 @@ namespace lm {
             }
         }
 
-        bitwise_and(imgIn, mask, imgOut);
+        imgOut = Mat(imgIn.size(), CV_8UC1, Scalar(255));
+        imgIn.copyTo(imgOut, mask);
 
         return LM_STATUS_OK;
     }
