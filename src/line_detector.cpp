@@ -14,8 +14,12 @@ namespace lm {
                                         // constructing gaussian pyramid octaves
         bdParams.widthOfBand_ = 1;
 
+#ifdef USE_LSD_DETECTOR
+        lineDetector_ = LSDDetector::createLSDDetector();
+#else
         bdParams_ = bdParams;
         lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
+#endif
     }      
     
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines) {
@@ -25,8 +29,12 @@ namespace lm {
 
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines, const cv::Mat& mask) {
         KeyLines detectedLines;
+#ifdef USE_LSD_DETECTOR
+        lineDetector_->detect(imgIn, detectedLines,  1, 1, mask);
+#else
         lineDetector_->detect(imgIn, detectedLines, mask );
-        float offsetR = (bdParams_.ksize_ - 1) * 0.4; // Estimation of impact of gaussian kernel smoothing on line position
+#endif
+        float offsetR = 1.6; // Estimation of impact of gaussian kernel smoothing on line position
         for ( size_t i = 0; i < detectedLines.size(); i++ )
         {
             KeyLine kl = detectedLines[i];
