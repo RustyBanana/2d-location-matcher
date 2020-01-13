@@ -38,6 +38,7 @@ endif()
 find_package(OpenCV REQUIRED)
 
 include_directories(
+  .
   include
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -57,7 +58,18 @@ target_link_libraries(line_filter
   ${OpenCV_LIBS}
 )
 
+add_library(segment src/segment.cpp)
+target_link_libraries(segment
+  ${OpenCV_LIBS}
+)
+
 ## === Tests === 
+add_library(test_datasets test/test_datasets.cpp)
+target_link_libraries(test_datasets
+  lm_utils
+  gtest_main
+  ${OpenCV_LIBS}
+)
 
 add_executable(line_detector_test test/line_detector_test.cpp)
 target_link_libraries(line_detector_test
@@ -74,3 +86,10 @@ target_link_libraries(line_filter_test
   gtest_main
 )
 add_test(NAME lineFilterTest COMMAND line_filter_test)
+
+add_executable(segment_test test/segment_test.cpp)
+target_link_libraries(segment_test
+  segment
+  test_datasets
+  gtest_main
+)

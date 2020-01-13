@@ -1,10 +1,37 @@
-#include "segment.hpp"
+#include "location_matcher/segment.hpp"
 
 using namespace std;
 using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {
+    
+    LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
+                         const cv::line_descriptor::KeyLine& line2,
+                         float distThreshold) {
+        Point2f start1(line1.startPointX, line1.startPointY);
+        Point2f start2(line2.startPointX, line2.startPointY);
+        Point2f end1(line1.endPointX, line1.endPointY);
+        Point2f end2(line2.endPointX, line2.endPointY);
+        
+        return dist(start1, start2) <= distThreshold ? LINE_JOINT_SS :
+               dist(start1, end2)   <= distThreshold ? LINE_JOINT_SE :
+               dist(end1,   start2) <= distThreshold ? LINE_JOINT_ES :
+               dist(end1,   end2)   <= distThreshold ? LINE_JOINT_EE :
+               LINE_JOINT_NONE;
+    }
+
+    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2) {
+        const float lengthThreshold = 10;
+        const float angleThreshold = M_PI * 10/180;
+
+        float angleWeight = max(0.0f, abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
+
+        float lengthWeight = max(0.0f, abs(line1.lineLength - line2.lineLength)/lengthThreshold);
+
+        return angleWeight * lengthWeight;
+    }
+
     LmStatus SegmentMatch::computeOffsets() {
         if (segment1.data_.size() != segment2.data_.size()) {
             return LM_STATUS_SIZE_MISMATCH;
@@ -32,7 +59,7 @@ namespace lm {
 
     LmStatus Segments::addLines(const KeyLines& lines) {
         // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
-        for (auto lineItr = lines.cbegin(); lineItr != lines.cend; lineItr++) {
+        for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
             shared_ptr<Segment> lineSegment(new Segment(*lineItr));
             bool joinedToExistingSegment = false;
 
@@ -58,23 +85,24 @@ namespace lm {
         return LM_STATUS_OK;
     }
 
+    Segment::Segment() {
+        
+    }
+
     Segment::Segment(const cv::line_descriptor::KeyLine& line) {
         data_.push_back(line);
     }
 
-    LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
-                         const cv::line_descriptor::KeyLine& line2,
-                         float distThreshold) {
-        Point2f start1(line1.startPointX, line1.startPointY);
-        Point2f start2(line2.startPointX, line2.startPointY);
-        Point2f end1(line1.endPointX, line1.endPointY);
-        Point2f end2(line2.endPointX, line2.endPointY);
-        
-        return dist(start1, start2) <= distThreshold ? LINE_JOINT_SS :
-               dist(start1, end2)   <= distThreshold ? LINE_JOINT_SE :
-               dist(end1,   start2) <= distThreshold ? LINE_JOINT_ES :
-               dist(end1,   end2)   <= distThreshold ? LINE_JOINT_EE :
-               LINE_JOINT_NONE;
+    Segment::Segment(const Segment& segment, int beginIndex, int endIndex) {
+        int i = 0;
+        auto pData = segment.data_.begin();
+        while (i < segment.data_.size()) {
+            if (i >= beginIndex && i < endIndex) {
+                data_.push_back(*pData);
+            }
+            pData++;
+            i++;
+        }
     }
 
     LmStatus Segment::join(Segment& other) {
@@ -121,7 +149,6 @@ namespace lm {
 
     template <typename Iterator>
     void getMatchIndexes(Iterator thisBegin, Iterator thisEnd, Iterator otherBegin, Iterator otherEnd, vector<vector<int>>& matchIndexes, Mat likenessMatrix) {
-        likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);
         const float likenessThreshold = 0.4;
 
         int i = 0;
@@ -139,7 +166,7 @@ namespace lm {
         }
     }
 
-    void Segment::findMatchesInDiag(Mat likenessMatrix, Point2i startIndex, Point2i incrementIndex, float likenessThreshold, vector<SegmentMatch>& matches) {
+    void Segment::findMatchesInDiag(Mat likenessMatrix, Point2i startIndex, Point2i incrementIndex, float likenessThreshold, vector<SegmentMatch>& matches) const {
         Point2i prevMatch, currIndex, prevIndex;
         int numRows = likenessMatrix.rows;
         int numCols = likenessMatrix.cols;
@@ -158,6 +185,7 @@ namespace lm {
                     SegmentMatch newMatch;
                     newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
                     newMatch.segment2 = Segment(*this, prevMatch.y, prevIndex.y);
+                    newMatch.computeOffsets();
                     matches.push_back(newMatch);
                 }
                 matchLength = 0;
@@ -168,7 +196,7 @@ namespace lm {
 
     LmStatus Segment::compareWith(const Segment& other, std::vector<SegmentMatch>& matches) const {
         // First compare each line in this with each line in other to find starting point matches.
-        Mat likenessMatrix;
+        Mat likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);;
         vector<vector<int>> matchIndexes;
         getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), matchIndexes, likenessMatrix);
 

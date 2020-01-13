@@ -25,37 +25,16 @@ namespace lm{
         LINE_JOINT_EE       = 0b111
     };
 
-    struct SegmentMatch {
-        Segment segment1;
-        Segment segment2;
-        Point2f positionOffset;
-        float angleOffset;
-
-        LmStatus computeOffsets();
-    };
+    class Segment;
+    class Segments;
+    struct SegmentMatch;
 
     LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
                          const cv::line_descriptor::KeyLine& line2,
                          float distThreshold);
                         
     // Compares the likeness of two lines, with 1.0 being the same, 0 being completely different.
-    float compareLines(const KeyLine& line1, const KeyLine& line2);
-
-    class Segments {
-        public:
-        LmStatus addLines(const KeyLines& lines);
-        LmStatus clear();
-
-        // Return k nearest neighbour matches sorted by match strength
-        LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
-
-        private:
-        // Stores each segment as a shared_ptr because when joining segments some will be lost
-        std::vector<std::shared_ptr<Segment>> data_;
-
-        // Helper function to remove duplicates in data_
-        void pruneSegments(std::vector<bool> keepList);
-    };
+    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2);
 
     class Segment {
         friend class Segments;
@@ -64,8 +43,9 @@ namespace lm{
         typedef std::list<cv::line_descriptor::KeyLine> segment_t;
 
         public:
+        Segment();
         Segment(const cv::line_descriptor::KeyLine& line);
-        Segment(const Segment&, int beginIndex, int endIndex);
+        Segment(const Segment& segment, int beginIndex, int endIndex);
 
         const segment_t& data();
 
@@ -86,8 +66,34 @@ namespace lm{
             cv::Point2i startIndex, 
             cv::Point2i incrementIndex, 
             float likenessThreshold, 
-            std::vector<SegmentMatch>& matches);
+            std::vector<SegmentMatch>& matches) const;
 
         segment_t data_;
+    };
+
+    class Segments {
+        public:
+        LmStatus addLines(const KeyLines& lines);
+        LmStatus clear();
+
+        // Return k nearest neighbour matches sorted by match strength
+        LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
+
+        private:
+        // Stores each segment as a shared_ptr because when joining segments some will be lost
+        std::vector<std::shared_ptr<Segment>> data_;
+
+        // Helper function to remove duplicates in data_
+        void pruneSegments(std::vector<bool> keepList);
+    };
+
+    struct SegmentMatch {
+        //SegmentMatch();
+        Segment segment1;
+        Segment segment2;
+        cv::Point2f positionOffset;
+        float angleOffset;
+
+        LmStatus computeOffsets();
     };
 };

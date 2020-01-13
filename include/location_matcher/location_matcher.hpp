@@ -56,7 +56,6 @@ namespace lm {
         LineFilter lineFilter_;
 
         private:
-        getContours()
         
     };
 };

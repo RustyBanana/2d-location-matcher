@@ -12,8 +12,21 @@ namespace lm {
     };
 
     inline float dist(cv::Point2f pt1, cv::Point2f pt2) {
-        Point2f diff = pt2 - pt1;
+        cv::Point2f diff = pt2 - pt1;
         return sqrt(diff.dot(diff));
+    }
+
+    inline float wrap2pi(float angle) {
+        return fmod(angle, M_PI);
+    }
+
+    inline float angleDiff(float angle1, float angle2) {
+        float diff = angle1 - angle2;
+        if (abs(diff <= M_PI)) {
+            return diff;
+        } else {
+            return  diff < 0 ? diff + 2 * M_PI : diff - 2 * M_PI;
+        }
     }
 
     typedef std::vector<cv::line_descriptor::KeyLine> KeyLines;
@@ -23,7 +36,6 @@ namespace lm {
 
     // Each Keyline in the list is placed adjacent to the KeyLines they are connected to in the image.
     typedef std::list<std::shared_ptr<cv::line_descriptor::KeyLine>> Segment11;
-    typedef std::vector<Segment> segments;
 
 
 };
