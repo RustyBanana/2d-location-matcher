@@ -139,7 +139,10 @@ namespace lm {
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
                 if (::lm::isJoinedTo(thisSegmentEnds[i], otherSegmentEnds[j], connectionDistThresh)) {
-                    return static_cast<SegmentJoint>(i << SEGMENT_JOINT_1 | j << SEGMENT_JOINT_2);
+                    return static_cast<SegmentJoint>(
+                            i << SEGMENT_JOINT_1 |
+                            j << SEGMENT_JOINT_2 |
+                            1 << SEGMENT_JOINT_JOINED);
                 }
             }
         }    

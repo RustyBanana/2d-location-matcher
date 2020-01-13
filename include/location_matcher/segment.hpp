@@ -14,8 +14,9 @@ namespace lm{
         SEGMENT_JOINT_BF    = 0b101,
         SEGMENT_JOINT_BB    = 0b111
     };
-    const int SEGMENT_JOINT_1 = 0b100;
-    const int SEGMENT_JOINT_2 = 0b010;
+    const int SEGMENT_JOINT_1 = 2;
+    const int SEGMENT_JOINT_2 = 1;
+    const int SEGMENT_JOINT_JOINED = 0;
 
     enum LineJoint {
         LINE_JOINT_NONE     = 0b000,

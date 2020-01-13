@@ -21,7 +21,7 @@ namespace lm {
                 segments1_.push_back(Segment(lines1_[i]));
             }
             for (int i = 0; i < lines2_.size(); i++) {
-                segments1_.push_back(Segment(lines2_[i]));
+                segments2_.push_back(Segment(lines2_[i]));
             }
 
         }
@@ -35,7 +35,7 @@ namespace lm {
     }
 
     TEST_F(SegmentTest, isJoinedToConnected) {
-        EXPECT_EQ(SEGMENT_JOINT_BB, segments2_[0].isJoinedTo(segments2_[1]));
+        EXPECT_EQ(SEGMENT_JOINT_FF, segments2_[0].isJoinedTo(segments2_[1]));
     }
 }
 
