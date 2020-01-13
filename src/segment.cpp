@@ -57,33 +57,7 @@ namespace lm {
 
     }
 
-    LmStatus Segments::addLines(const KeyLines& lines) {
-        // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
-        for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
-            shared_ptr<Segment> lineSegment(new Segment(*lineItr));
-            bool joinedToExistingSegment = false;
-
-            for (auto segmentItr = data_.begin(); segmentItr != data_.end(); segmentItr++) {
-                shared_ptr<Segment>& pSegment = *segmentItr;
-                if (lineSegment->join(*pSegment) == LM_STATUS_OK) {
-                    // Successful join operation; update pSegment to the new segment and continue because it is possible for a single line to connect to two segments
-                    pSegment = lineSegment;
-                    joinedToExistingSegment = true;
-                }
-            }
-
-            if (!joinedToExistingSegment) {
-                data_.push_back(lineSegment);
-            }
-        }
-
-        return LM_STATUS_OK;
-    }
-
-    LmStatus Segments::clear() {
-        data_.clear();
-        return LM_STATUS_OK;
-    }
+    // ################### SEGMENT ###################
 
     Segment::Segment() {
         
@@ -259,5 +233,61 @@ namespace lm {
     // Getters and setters
     const Segment::segment_t& Segment::data() {
         return data_;
+    }
+
+    // ############ SEGMENTS ############
+
+    LmStatus Segments::addLines(const KeyLines& lines) {
+        // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
+        for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
+            shared_ptr<Segment> lineSegment(new Segment(*lineItr));
+            bool joinedToExistingSegment = false;
+            
+            // True if the segment is unique, false if segment has been merged elsewhere
+            vector<bool> keepSegments;
+
+            for (auto segmentItr = data_.begin(); segmentItr != data_.end(); segmentItr++) {
+                shared_ptr<Segment>& pSegment = *segmentItr;
+                if (lineSegment->join(*pSegment) == LM_STATUS_OK) {
+                    // Successful join operation; update pSegment to the new segment and continue because it is possible for a single line to connect to two segments
+                    pSegment = lineSegment;
+                    joinedToExistingSegment = true;
+                    keepSegments.push_back(false);
+                } else {
+                    keepSegments.push_back(true);
+                }
+            }
+
+            if (!joinedToExistingSegment) {
+                data_.push_back(lineSegment);
+            } else {
+                pruneSegments(keepSegments);
+            }
+        }
+
+        return LM_STATUS_OK;
+    }
+
+    LmStatus Segments::clear() {
+        data_.clear();
+        return LM_STATUS_OK;
+    }
+
+    const Segments::data_t& Segments::data() {
+        return data_;
+    }
+
+    void Segments::pruneSegments(std::vector<bool> keepList) {
+        std::vector<std::shared_ptr<Segment>> prunedSegments;
+        auto pSegmentItr = data_.cbegin();
+        auto keepItr = keepList.cbegin();
+
+        while (pSegmentItr != data_.cend()) {
+            if (*keepItr == true) {
+                prunedSegments.push_back(*pSegmentItr);
+            }
+            pSegmentItr++;
+            keepItr++;
+        }
     }
 }

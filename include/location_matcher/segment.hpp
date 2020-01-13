@@ -73,6 +73,7 @@ namespace lm{
     };
 
     class Segments {
+        typedef std::vector<std::shared_ptr<Segment>> data_t;
         public:
         LmStatus addLines(const KeyLines& lines);
         LmStatus clear();
@@ -80,9 +81,11 @@ namespace lm{
         // Return k nearest neighbour matches sorted by match strength
         LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
 
+        const data_t& data();
+
         private:
         // Stores each segment as a shared_ptr because when joining segments some will be lost
-        std::vector<std::shared_ptr<Segment>> data_;
+        data_t data_;
 
         // Helper function to remove duplicates in data_
         void pruneSegments(std::vector<bool> keepList);

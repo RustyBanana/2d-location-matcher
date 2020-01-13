@@ -30,6 +30,13 @@ namespace lm {
         vector<Segment> segmentsVec2_;
     };
 
+    class SegmentsTest : public SegmentTest {
+        public:
+        void SetUp() override {
+            SegmentTest::SetUp();
+        }
+    };
+
     TEST_F(SegmentTest, isJoinedToUnconnected) {
         EXPECT_EQ(SEGMENT_JOINT_NONE, segmentsVec1_[0].isJoinedTo(segmentsVec1_[1]));
     }
@@ -51,13 +58,42 @@ namespace lm {
         vector<Segment> segmentsVec = segmentsVec2_;
 
         LmStatus status = segmentsVec[0].join(segmentsVec[1]);
-
+ 
         EXPECT_EQ(LM_STATUS_OK, status);
         EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().front(), segmentsVec2_[0].data().front());
         EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().back(), segmentsVec2_[1].data().front());
         EXPECT_EQ(true, segmentsVec[1].data().empty());
 
     }
+
+    TEST_F(SegmentsTest, addLinesUnconnected) {
+        Segments segments;
+        LmStatus status = segments.addLines(lines1_);
+
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        auto pSegment = segments.data()[0];
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[0].data().front());
+        pSegment = segments.data()[1];
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[1].data().front());
+    }
+
+    TEST_F(SegmentsTest, addLinesConnected) {
+        Segments segments;
+        LmStatus status = segments.addLines(lines2_);
+
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        auto pSegment = segments.data()[0];
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[0].data().front());
+        pSegment = segments.data()[0];
+        EXPECT_KEYLINE_EQUAL(pSegment->data().back(), segmentsVec1_[1].data().front());
+        pSegment = segments.data()[1];
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[2].data().front());        
+    }
+
+    
+    
 }
 
 int main(int argc, char* argv[]) {
