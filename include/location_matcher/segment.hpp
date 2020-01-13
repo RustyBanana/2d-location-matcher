@@ -25,9 +25,21 @@ namespace lm{
         LINE_JOINT_EE       = 0b111
     };
 
+    struct SegmentMatch {
+        Segment segment1;
+        Segment segment2;
+        Point2f positionOffset;
+        float angleOffset;
+
+        LmStatus computeOffsets();
+    };
+
     LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
                          const cv::line_descriptor::KeyLine& line2,
                          float distThreshold);
+                        
+    // Compares the likeness of two lines, with 1.0 being the same, 0 being completely different.
+    float compareLines(const KeyLine& line1, const KeyLine& line2);
 
     class Segments {
         public:
@@ -35,7 +47,7 @@ namespace lm{
         LmStatus clear();
 
         // Return k nearest neighbour matches sorted by match strength
-        LmStatus matchSegment(const Segment& segment, typeTBD& matches);
+        LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
 
         private:
         // Stores each segment as a shared_ptr because when joining segments some will be lost
@@ -46,14 +58,36 @@ namespace lm{
     };
 
     class Segment {
+        friend class Segments;
+        friend class SegmentMatch;
+        
+        typedef std::list<cv::line_descriptor::KeyLine> segment_t;
+
         public:
         Segment(const cv::line_descriptor::KeyLine& line);
+        Segment(const Segment&, int beginIndex, int endIndex);
+
+        const segment_t& data();
 
         // The other.data_ is appended to this->data_ and other.data_ is omptied
         LmStatus join(Segment& other);
         SegmentJoint isJoinedTo(const Segment& other) const;
 
-        private:
-        std::list<cv::line_descriptor::KeyLine> data_;
+        // Returns the k nearest best matches
+        LmStatus compareWith(const Segment& other, std::vector<SegmentMatch>& matches) const;
+
+
+
+        protected:
+        // Helper function for compareWith()
+        // It traverses a diagonal from startIndex in the direction of incrementIndex and if it finds 2 or more adjacent values in likenessMatrix >= likenessRatio, it will add the SegmentMatch to matches
+        void findMatchesInDiag(
+            cv::Mat likenessMatrix, 
+            cv::Point2i startIndex, 
+            cv::Point2i incrementIndex, 
+            float likenessThreshold, 
+            std::vector<SegmentMatch>& matches);
+
+        segment_t data_;
     };
 };

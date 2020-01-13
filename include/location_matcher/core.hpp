@@ -7,7 +7,8 @@ namespace lm {
     enum LmStatus {
         LM_STATUS_OK = 0,
         LM_STATUS_ERROR_GENERIC,
-        LM_STATUS_ERROR_LINES_UNCONNECTED
+        LM_STATUS_ERROR_LINES_UNCONNECTED,
+        LM_STATUS_SIZE_MISMATCH
     };
 
     inline float dist(cv::Point2f pt1, cv::Point2f pt2) {

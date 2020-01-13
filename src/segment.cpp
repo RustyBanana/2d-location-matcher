@@ -5,6 +5,30 @@ using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {
+    LmStatus SegmentMatch::computeOffsets() {
+        if (segment1.data_.size() != segment2.data_.size()) {
+            return LM_STATUS_SIZE_MISMATCH;
+        }
+
+        float angle1 = 0;
+        float angle2 = 0;
+
+        // Do an averaging operation for the angle of each point
+        auto pLine1 = segment1.data_.cbegin();
+        auto pLine2 = segment2.data_.cbegin();
+        while (pLine1 != segment1.data_.cend()) {
+            angle1 += pLine1->angle;
+            angle2 += pLine2->angle;
+
+            pLine1++;
+            pLine2++;
+        }
+        angle1 /= segment1.data_.size();
+        angle2 /= segment2.data_.size();
+
+        // TODO implement angle offset and position offset
+
+    }
 
     LmStatus Segments::addLines(const KeyLines& lines) {
         // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
@@ -93,5 +117,116 @@ namespace lm {
         }    
 
         return SEGMENT_JOINT_NONE;
+    }
+
+    template <typename Iterator>
+    void getMatchIndexes(Iterator thisBegin, Iterator thisEnd, Iterator otherBegin, Iterator otherEnd, vector<vector<int>>& matchIndexes, Mat likenessMatrix) {
+        likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);
+        const float likenessThreshold = 0.4;
+
+        int i = 0;
+        int j = 0;
+        for (auto thisLineItr = thisBegin; thisLineItr != thisEnd; thisLineItr++) {
+            j = 0;
+            for (auto otherLineItr = otherBegin; otherLineItr != otherEnd; otherLineItr++) {
+                likenessMatrix.at<float>(i, j) = compareLines(*thisLineItr, *otherLineItr);
+                if (compareLines(*thisLineItr, *otherLineItr) >= likenessThreshold) {
+                    matchIndexes.push_back(vector<int>(i, j));
+                }
+                j++;
+            }
+            i++;
+        }
+    }
+
+    void Segment::findMatchesInDiag(Mat likenessMatrix, Point2i startIndex, Point2i incrementIndex, float likenessThreshold, vector<SegmentMatch>& matches) {
+        Point2i prevMatch, currIndex, prevIndex;
+        int numRows = likenessMatrix.rows;
+        int numCols = likenessMatrix.cols;
+        int matchLength = 0;
+        currIndex = startIndex;
+        while ( currIndex.y >= 0 && currIndex.y < numCols && 
+            currIndex.x >= 0 && currIndex.x < numRows) {
+            if (likenessMatrix.at<float>(currIndex) >= likenessThreshold) {
+                if (matchLength == 0) {
+                    prevMatch = currIndex;
+                }
+                matchLength++;
+            } else {
+                if (matchLength > 1) {
+                    // Matches for current segment ended. Create a segment fro prevMatch to prevIndex
+                    SegmentMatch newMatch;
+                    newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
+                    newMatch.segment2 = Segment(*this, prevMatch.y, prevIndex.y);
+                    matches.push_back(newMatch);
+                }
+                matchLength = 0;
+            }
+            currIndex += incrementIndex;
+        }
+    }
+
+    LmStatus Segment::compareWith(const Segment& other, std::vector<SegmentMatch>& matches) const {
+        // First compare each line in this with each line in other to find starting point matches.
+        Mat likenessMatrix;
+        vector<vector<int>> matchIndexes;
+        getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), matchIndexes, likenessMatrix);
+
+        int numRows = likenessMatrix.rows;
+        int numCols = likenessMatrix.cols;
+
+        // Search through diagonials of the matrix for adjacent groups
+        // Top left to bottom right diagonals
+        for (int i = 0; i < numCols; i++) {
+            findMatchesInDiag(likenessMatrix, Point2i(0, i), Point2i(1, 1), 0.4, matches);
+        }
+        for (int i = 1; i < numRows; i++) {
+            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(1, 1), 0.4, matches);
+        }
+
+        // Top right to bottom left diagonals
+        for (int i = 0; i < numCols; i++) {
+            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(-1, 1), 0.4, matches);
+        }
+        for (int i = 1; i < numRows; i++) {
+            findMatchesInDiag(likenessMatrix, Point2i(numCols-1, i), Point2i(-1, 1), 0.4, matches);
+        }
+
+        /*
+        // If there are strong diagonals in the matrix, then there are matches there. We check for this by adding and subtracting the row and column indexes stored in matchIndexes and checking for any repeated constant values. diagonals going from top left to bottom right give a constant for row - column, diagonals from bottom left to top right give a constant for row + column.
+        // Create a vector of shape (2,0). Store sums at [0] and diffs at [1]
+        vector<vector<int>> indexSums({{},{}});
+        for (auto itr = matchIndexes.cbegin(); itr != matchIndexes.cend(); itr++) {
+            indexSums[0].push_back((*itr)[0] + (*itr)[1]);
+            indexSums[1].push_back((*itr)[0] - (*itr)[1]);
+        }
+
+        // Sort each vector look for duplicates.
+        vector<vector<int>> duplicates({{},{}});
+        for (int i = 0; i < 2; i++) {
+            sort(indexSums[i].begin(), indexSums[i].end());
+            int prevNum = -99999;
+            int prevDuplicate = -99999;
+            for (auto itr = indexSums[i].cbegin(); itr != indexSums[i].cend(); itr++) {
+                int currNum = *itr;
+                if (prevNum == currNum && currNum != prevDuplicate) {
+                    duplicates[i].push_back(currNum);
+                    prevDuplicate = currNum;
+                }
+                prevNum = currNum;
+            }
+        }
+        
+        // For each duplicate, search through the matchIndexes vector to looking for values which are adjacent. If they are found, create a new segment match for it.
+        for (auto itr = duplicates[0].cbegin(); itr != duplicates[0].cend(); itr++) {
+            int sum = *itr;
+
+        }
+        */
+    }
+
+    // Getters and setters
+    const Segment::segment_t& Segment::data() {
+        return data_;
     }
 }
