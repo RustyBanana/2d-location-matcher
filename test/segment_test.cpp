@@ -18,35 +18,44 @@ namespace lm {
             BaseTest::SetUp();
             
             for (int i = 0; i < lines1_.size(); i++) {
-                segments1_.push_back(Segment(lines1_[i]));
+                segmentsVec1_.push_back(Segment(lines1_[i]));
             }
             for (int i = 0; i < lines2_.size(); i++) {
-                segments2_.push_back(Segment(lines2_[i]));
+                segmentsVec2_.push_back(Segment(lines2_[i]));
             }
 
         }
 
-        vector<Segment> segments1_;
-        vector<Segment> segments2_;
+        vector<Segment> segmentsVec1_;
+        vector<Segment> segmentsVec2_;
     };
 
     TEST_F(SegmentTest, isJoinedToUnconnected) {
-        EXPECT_EQ(SEGMENT_JOINT_NONE, segments1_[0].isJoinedTo(segments1_[1]));
+        EXPECT_EQ(SEGMENT_JOINT_NONE, segmentsVec1_[0].isJoinedTo(segmentsVec1_[1]));
     }
 
     TEST_F(SegmentTest, isJoinedToConnected) {
-        EXPECT_EQ(SEGMENT_JOINT_FF, segments2_[0].isJoinedTo(segments2_[1]));
+        EXPECT_EQ(SEGMENT_JOINT_FF, segmentsVec2_[0].isJoinedTo(segmentsVec2_[1]));
     }
 
     TEST_F(SegmentTest, joinUnconnected) {
-        vector<Segment> segments = segments1_;
-        LmStatus status = segments[0].join(segments[1]);
+        vector<Segment> segmentsVec = segmentsVec1_;
+        LmStatus status = segmentsVec[0].join(segmentsVec[1]);
 
         EXPECT_EQ(LM_STATUS_ERROR_LINES_UNCONNECTED, status);
-    
+        EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().front(), segmentsVec1_[0].data().front());
+        EXPECT_KEYLINE_EQUAL(segmentsVec[1].data().front(), segmentsVec1_[1].data().front());
     }
 
     TEST_F(SegmentTest, joinConnected) {
+        vector<Segment> segmentsVec = segmentsVec2_;
+
+        LmStatus status = segmentsVec[0].join(segmentsVec[1]);
+
+        EXPECT_EQ(LM_STATUS_OK, status);
+        EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().front(), segmentsVec2_[0].data().front());
+        EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().back(), segmentsVec2_[1].data().front());
+        EXPECT_EQ(true, segmentsVec[1].data().empty());
 
     }
 }
