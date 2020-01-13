@@ -37,6 +37,18 @@ namespace lm {
     TEST_F(SegmentTest, isJoinedToConnected) {
         EXPECT_EQ(SEGMENT_JOINT_FF, segments2_[0].isJoinedTo(segments2_[1]));
     }
+
+    TEST_F(SegmentTest, joinUnconnected) {
+        vector<Segment> segments = segments1_;
+        LmStatus status = segments[0].join(segments[1]);
+
+        EXPECT_EQ(LM_STATUS_ERROR_LINES_UNCONNECTED, status);
+    
+    }
+
+    TEST_F(SegmentTest, joinConnected) {
+
+    }
 }
 
 int main(int argc, char* argv[]) {

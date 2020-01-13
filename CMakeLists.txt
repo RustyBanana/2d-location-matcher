@@ -73,6 +73,7 @@ target_link_libraries(test_datasets
 
 add_executable(line_detector_test test/line_detector_test.cpp)
 target_link_libraries(line_detector_test
+  test_datasets
   line_detector
   lm_utils
   gtest_main

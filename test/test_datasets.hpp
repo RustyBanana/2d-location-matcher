@@ -10,6 +10,16 @@ using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {
+    const float LENGTH_TOLERANCE = 5;
+    const float ANGLE_TOLERANCE = M_PI * 10/180;
+    const float POSITION_TOLERANCE = 3;
+    // === LineDetector testing util functions ===
+    bool KeyLineCompare(const KeyLine& line1, const KeyLine& line2);
+
+    void EXPECT_KEYLINE_EQUAL(const KeyLine& expected, const KeyLine& actual);
+
+    void EXPECT_KEYLINES_EQUAL(const KeyLines& expected_, const KeyLines& actual_);
+
     class BaseTest : public ::testing::Test{
         public:
 
