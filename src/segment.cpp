@@ -239,12 +239,12 @@ namespace lm {
 
     LmStatus Segments::addLines(const KeyLines& lines) {
         // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
+        
+        // True if the segment is unique, false if segment has been merged elsewhere
+        vector<bool> keepSegments;
         for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
             shared_ptr<Segment> lineSegment(new Segment(*lineItr));
             bool joinedToExistingSegment = false;
-            
-            // True if the segment is unique, false if segment has been merged elsewhere
-            vector<bool> keepSegments;
 
             for (auto segmentItr = data_.begin(); segmentItr != data_.end(); segmentItr++) {
                 shared_ptr<Segment>& pSegment = *segmentItr;
@@ -260,10 +260,13 @@ namespace lm {
 
             if (!joinedToExistingSegment) {
                 data_.push_back(lineSegment);
-            } else {
-                pruneSegments(keepSegments);
+                // Catch edge case
+                if (lineItr == lines.cend() - 1) {
+                    keepSegments.push_back(true);
+                }
             }
         }
+        pruneSegments(keepSegments);
 
         return LM_STATUS_OK;
     }

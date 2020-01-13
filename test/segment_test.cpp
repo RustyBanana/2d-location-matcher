@@ -85,11 +85,11 @@ namespace lm {
         EXPECT_EQ(LM_STATUS_OK, status);
 
         auto pSegment = segments.data()[0];
-        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[0].data().front());
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec2_[1].data().front());
         pSegment = segments.data()[0];
-        EXPECT_KEYLINE_EQUAL(pSegment->data().back(), segmentsVec1_[1].data().front());
+        EXPECT_KEYLINE_EQUAL(pSegment->data().back(), segmentsVec2_[0].data().front());
         pSegment = segments.data()[1];
-        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec1_[2].data().front());        
+        EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec2_[2].data().front());        
     }
 
     
