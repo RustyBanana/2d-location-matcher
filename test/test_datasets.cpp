@@ -13,8 +13,8 @@ namespace lm{
     }
 
     void EXPECT_KEYLINE_EQUAL(const KeyLine& expected, const KeyLine& actual) {
-        EXPECT_LE(LENGTH_TOLERANCE, abs(expected.lineLength - actual.lineLength));
-        EXPECT_LE(ANGLE_TOLERANCE, abs(expected.angle - actual.angle));
+        EXPECT_GE(LENGTH_TOLERANCE, abs(expected.lineLength - actual.lineLength));
+        EXPECT_GE(ANGLE_TOLERANCE, abs(expected.angle - actual.angle));
         
         Point2f startDiff = expected.getStartPoint() - actual.getStartPoint();
         Point2f endDiff = expected.getEndPoint() - actual.getEndPoint();
@@ -22,8 +22,8 @@ namespace lm{
         float startOffset = sqrt(startDiff.dot(startDiff));
         float endOffset = sqrt(endDiff.dot(endDiff));
 
-        EXPECT_LE(POSITION_TOLERANCE, startOffset);
-        EXPECT_LE(POSITION_TOLERANCE, endOffset);
+        EXPECT_GE(POSITION_TOLERANCE, startOffset);
+        EXPECT_GE(POSITION_TOLERANCE, endOffset);
     }
 
     void EXPECT_KEYLINES_EQUAL(const KeyLines& expected_, const KeyLines& actual_) {
