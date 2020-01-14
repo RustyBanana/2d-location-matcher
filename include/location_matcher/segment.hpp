@@ -35,7 +35,7 @@ namespace lm{
                          float distThreshold);
                         
     // Compares the likeness of two lines, with 1.0 being the same, 0 being completely different.
-    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2);
+    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2, bool angleInvariont=false);
 
     class Segment {
         friend class Segments;

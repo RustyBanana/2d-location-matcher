@@ -21,11 +21,11 @@ namespace lm {
                LINE_JOINT_NONE;
     }
 
-    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2) {
+    float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2, bool angleInvariant) {
         const float lengthThreshold = 10;
         const float angleThreshold = M_PI * 10/180;
 
-        float angleWeight = max(0.0f, 1 - abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
+        float angleWeight = angleInvariant ? 1.0f : max(0.0f, 1 - abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
 
         float lengthWeight = max(0.0f, 1 - abs(line1.lineLength - line2.lineLength)/lengthThreshold);
 
@@ -125,7 +125,7 @@ namespace lm {
     }
 
     template <typename Iterator>
-    void getMatchIndexes(Iterator thisBegin, Iterator thisEnd, Iterator otherBegin, Iterator otherEnd, vector<vector<int>>& matchIndexes, Mat likenessMatrix) {
+    void getMatchIndexes(Iterator thisBegin, Iterator thisEnd, Iterator otherBegin, Iterator otherEnd, Mat likenessMatrix, bool angleInvariant=false) {
         const float likenessThreshold = 0.4;
 
         int i = 0;
@@ -133,10 +133,7 @@ namespace lm {
         for (auto thisLineItr = thisBegin; thisLineItr != thisEnd; thisLineItr++) {
             j = 0;
             for (auto otherLineItr = otherBegin; otherLineItr != otherEnd; otherLineItr++) {
-                likenessMatrix.at<float>(i, j) = compareLines(*thisLineItr, *otherLineItr);
-                if (compareLines(*thisLineItr, *otherLineItr) >= likenessThreshold) {
-                    matchIndexes.push_back(vector<int>(i, j));
-                }
+                likenessMatrix.at<float>(i, j) = compareLines(*thisLineItr, *otherLineItr, angleInvariant);
                 j++;
             }
             i++;
@@ -187,8 +184,7 @@ namespace lm {
         // Contains a float from 0->1 which represents the likeness between the line i of this segment at row i of the matrix, to the line j of the other segment at col j of the matrix
 
         Mat likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);;
-        vector<vector<int>> matchIndexes;
-        getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), matchIndexes, likenessMatrix);
+        getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), likenessMatrix, true);
 
         int numRows = likenessMatrix.rows;
         int numCols = likenessMatrix.cols;

@@ -27,27 +27,59 @@ namespace lm {
 
     class SegmentTest : public BaseTest {
         public:
+        // Used to generate a vector from connected KeyLines
+        Segment autogenSegment(KeyLines lines) {
+            Segment seg;
+            for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
+                seg.data_.push_back(*lineItr);
+            }
+            return seg;
+        }
+
+        vector<Segment> getSegmentsVec(KeyLines lines) {
+            vector<Segment> segVec;
+            for (int i = 0; i < lines.size(); i++) {
+                segVec.push_back(Segment(lines[i]));
+            }
+
+            return segVec;
+        }
+
         void SetUp() override {
             BaseTest::SetUp();
             
-            for (int i = 0; i < lines1_.size(); i++) {
-                segmentsVec1_.push_back(Segment(lines1_[i]));
-            }
-            for (int i = 0; i < lines2_.size(); i++) {
-                segmentsVec2_.push_back(Segment(lines2_[i]));
-            }
+            segmentsVec1_ = getSegmentsVec(lines1_);
+            segmentsVec2_ = getSegmentsVec(lines2_);
+            segmentsVec3_ = getSegmentsVec(lines3_);
+            segmentsVec4_ = getSegmentsVec(lines4_);
+            segmentsVec5_ = getSegmentsVec(lines5_);
 
             segmentsVecAns1_ = segmentsVec1_;
             segmentsVecAns2_.push_back(segmentsVec2_[0]);
             segmentsVecAns2_[0].data_.push_back(segmentsVec2_[1].data_.front());
             segmentsVecAns2_.push_back(segmentsVec2_[2].data_.front());
+
+            // These lines are all connected together with the last line being the first in the segment.
+            segmentsVecAutogen3_.push_back(autogenSegment(lines3_));
+            segmentsVecAutogen4_.push_back(autogenSegment(lines4_));
+            segmentsVecAutogen5_.push_back(autogenSegment(lines5_));
         }
 
+        // Vector containing segments with a single line each
         vector<Segment> segmentsVec1_;
         vector<Segment> segmentsVec2_;
+        vector<Segment> segmentsVec3_;
+        vector<Segment> segmentsVec4_;
+        vector<Segment> segmentsVec5_;
 
+        // Manually created resultant segment vector when segmentsVecX_ is joined together
         vector<Segment> segmentsVecAns1_;
         vector<Segment> segmentsVecAns2_;
+
+        // Automtatically generated segment vectors
+        vector<Segment> segmentsVecAutogen3_;
+        vector<Segment> segmentsVecAutogen4_;
+        vector<Segment> segmentsVecAutogen5_;
 
     };
 
@@ -96,7 +128,18 @@ namespace lm {
         EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().front(), segmentsVec2_[0].data().front());
         EXPECT_KEYLINE_EQUAL(segmentsVec[0].data().back(), segmentsVec2_[1].data().front());
         EXPECT_EQ(true, segmentsVec[1].data().empty());
+    }
 
+    TEST_F(SegmentTest, joinLargeWallInterior2) {
+        vector<Segment> segmentsVec = segmentsVec4_;
+
+        for (int i = 1; i < segmentsVec.size(); i++) {
+            LmStatus status = segmentsVec[0].join(segmentsVec[i]);
+            EXPECT_EQ(LM_STATUS_OK, status);
+            EXPECT_EQ(true, segmentsVec[i].data().empty());
+        }
+
+        EXPECT_SEGMENT_EQUAL(segmentsVec[0], segmentsVecAutogen4_[0]);
     }
 
 /*  REMOVED UNTIL IMPLEMENTATION OF MIN MATCH LENGTH = 1
@@ -137,6 +180,20 @@ namespace lm {
         EXPECT_SEGMENT_EQUAL(segmentsVecAns2_[0], matches[0].segment1);
         EXPECT_SEGMENT_EQUAL(segmentsVecAns2_[0], matches[0].segment2);
 
+    }
+    
+    TEST_F(SegmentTest, compareWithConnectedMatchedRotated45) {
+        Segment segment2Copy = segmentsVecAns2_[0];
+
+        
+        std::vector<SegmentMatch> matches;
+
+        LmStatus status = segment2Copy.compareWith(segmentsVecAns2_[0], matches);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        // We compare a segment of 2 joined lines to itself
+        EXPECT_SEGMENT_EQUAL(segmentsVecAns2_[0], matches[0].segment1);
+        EXPECT_SEGMENT_EQUAL(segmentsVecAns2_[0], matches[0].segment2);
     }
 
     TEST_F(SegmentsTest, addLinesUnconnected) {

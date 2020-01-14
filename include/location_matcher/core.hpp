@@ -16,6 +16,10 @@ namespace lm {
         return sqrt(diff.dot(diff));
     }
 
+    inline float wrappi(float angle) {
+        return fmod(angle, M_PI_2);
+    }
+
     inline float wrap2pi(float angle) {
         return fmod(angle, M_PI);
     }

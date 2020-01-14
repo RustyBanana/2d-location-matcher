@@ -25,10 +25,17 @@ namespace lm {
 
         Mat testImg1_;
         Mat testImg2_;
+        Mat testImg3_;
+        Mat testImg4_;
+        Mat testImg5_;
 
         // The actual lines in each image
         KeyLines lines1_;
         KeyLines lines2_;
+        KeyLines lines3_;
+        KeyLines lines4_;
+        KeyLines lines5_;
+        
 
         void SetUp() override;
     };
