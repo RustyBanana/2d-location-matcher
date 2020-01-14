@@ -25,9 +25,9 @@ namespace lm {
         const float lengthThreshold = 10;
         const float angleThreshold = M_PI * 10/180;
 
-        float angleWeight = max(0.0f, abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
+        float angleWeight = max(0.0f, 1 - abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
 
-        float lengthWeight = max(0.0f, abs(line1.lineLength - line2.lineLength)/lengthThreshold);
+        float lengthWeight = max(0.0f, 1 - abs(line1.lineLength - line2.lineLength)/lengthThreshold);
 
         return angleWeight * lengthWeight;
     }
@@ -71,7 +71,7 @@ namespace lm {
         int i = 0;
         auto pData = segment.data_.begin();
         while (i < segment.data_.size()) {
-            if (i >= beginIndex && i < endIndex) {
+            if (i >= beginIndex && i <= endIndex) {
                 data_.push_back(*pData);
             }
             pData++;
@@ -143,11 +143,12 @@ namespace lm {
         }
     }
 
-    void Segment::findMatchesInDiag(Mat likenessMatrix, Point2i startIndex, Point2i incrementIndex, float likenessThreshold, vector<SegmentMatch>& matches) const {
+    void Segment::findMatchesInDiag(Mat likenessMatrix, Point2i startIndex, Point2i incrementIndex, float likenessThreshold, const Segment& other, vector<SegmentMatch>& matches) const {
         Point2i prevMatch, currIndex, prevIndex;
         int numRows = likenessMatrix.rows;
         int numCols = likenessMatrix.cols;
         int matchLength = 0;
+        int minMatchLength = 2;
         currIndex = startIndex;
         while ( currIndex.y >= 0 && currIndex.y < numCols && 
             currIndex.x >= 0 && currIndex.x < numRows) {
@@ -157,22 +158,34 @@ namespace lm {
                 }
                 matchLength++;
             } else {
-                if (matchLength > 1) {
-                    // Matches for current segment ended. Create a segment fro prevMatch to prevIndex
+                if (matchLength >= minMatchLength) {
+                    // Matches for current segment ended. Create a segment from prevMatch to prevIndex
                     SegmentMatch newMatch;
                     newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
-                    newMatch.segment2 = Segment(*this, prevMatch.y, prevIndex.y);
+                    newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
                     newMatch.computeOffsets();
                     matches.push_back(newMatch);
                 }
                 matchLength = 0;
             }
+            prevIndex = currIndex;
             currIndex += incrementIndex;
+        }
+
+        if (matchLength >= minMatchLength) {
+            // Matches for current segment ended. Create a segment from prevMatch to prevIndex
+            SegmentMatch newMatch;
+            newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
+            newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
+            newMatch.computeOffsets();
+            matches.push_back(newMatch);
         }
     }
 
     LmStatus Segment::compareWith(const Segment& other, std::vector<SegmentMatch>& matches) const {
         // First compare each line in this with each line in other to find starting point matches.
+        // Contains a float from 0->1 which represents the likeness between the line i of this segment at row i of the matrix, to the line j of the other segment at col j of the matrix
+
         Mat likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);;
         vector<vector<int>> matchIndexes;
         getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), matchIndexes, likenessMatrix);
@@ -183,19 +196,26 @@ namespace lm {
         // Search through diagonials of the matrix for adjacent groups
         // Top left to bottom right diagonals
         for (int i = 0; i < numCols; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(0, i), Point2i(1, 1), 0.4, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(0, i), Point2i(1, 1), 0.4, other, matches);
         }
         for (int i = 1; i < numRows; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(1, 1), 0.4, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(1, 1), 0.4, other, matches);
+        }
+
+        // Catch edge case of a 1x1 matrix
+        if (numRows == 1 && numCols == 1) {
+            return LM_STATUS_OK;
         }
 
         // Top right to bottom left diagonals
         for (int i = 0; i < numCols; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(-1, 1), 0.4, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(-1, 1), 0.4, other, matches);
         }
         for (int i = 1; i < numRows; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(numCols-1, i), Point2i(-1, 1), 0.4, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(numCols-1, i), Point2i(-1, 1), 0.4, other, matches);
         }
+
+        return LM_STATUS_OK;
 
         /*
         // If there are strong diagonals in the matrix, then there are matches there. We check for this by adding and subtracting the row and column indexes stored in matchIndexes and checking for any repeated constant values. diagonals going from top left to bottom right give a constant for row - column, diagonals from bottom left to top right give a constant for row + column.
@@ -231,7 +251,7 @@ namespace lm {
     }
 
     // Getters and setters
-    const Segment::segment_t& Segment::data() {
+    const Segment::segment_t& Segment::data() const {
         return data_;
     }
 
@@ -276,7 +296,7 @@ namespace lm {
         return LM_STATUS_OK;
     }
 
-    const Segments::data_t& Segments::data() {
+    const Segments::data_t& Segments::data() const {
         return data_;
     }
 

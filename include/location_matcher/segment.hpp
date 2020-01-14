@@ -40,6 +40,7 @@ namespace lm{
     class Segment {
         friend class Segments;
         friend class SegmentMatch;
+        friend class SegmentTest;
         
         typedef std::list<cv::line_descriptor::KeyLine> segment_t;
 
@@ -48,7 +49,7 @@ namespace lm{
         Segment(const cv::line_descriptor::KeyLine& line);
         Segment(const Segment& segment, int beginIndex, int endIndex);
 
-        const segment_t& data();
+        const segment_t& data() const;
 
         // The other.data_ is appended to this->data_ and other.data_ is omptied
         LmStatus join(Segment& other);
@@ -67,12 +68,14 @@ namespace lm{
             cv::Point2i startIndex, 
             cv::Point2i incrementIndex, 
             float likenessThreshold, 
+            const Segment& other, 
             std::vector<SegmentMatch>& matches) const;
 
         segment_t data_;
     };
 
     class Segments {
+        friend class SegmentsTest;
         typedef std::vector<std::shared_ptr<Segment>> data_t;
         public:
         LmStatus addLines(const KeyLines& lines);
@@ -81,7 +84,7 @@ namespace lm{
         // Return k nearest neighbour matches sorted by match strength
         LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
 
-        const data_t& data();
+        const data_t& data() const;
 
         private:
         // Stores each segment as a shared_ptr because when joining segments some will be lost
