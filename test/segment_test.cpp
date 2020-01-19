@@ -102,6 +102,13 @@ namespace lm {
         Segments segments2_;
     };
 
+    class SegmentMatchTest : public SegmentsTest {
+        public:
+        void SetUp() override {
+            SegmentsTest::SetUp();
+        }
+    };
+
     TEST_F(SegmentTest, isJoinedToUnconnected) {
         EXPECT_EQ(SEGMENT_JOINT_NONE, segmentsVec1_[0].isJoinedTo(segmentsVec1_[1]));
     }
@@ -222,7 +229,66 @@ namespace lm {
         EXPECT_KEYLINE_EQUAL(pSegment->data().front(), segmentsVec2_[2].data().front());        
     }
 
-    
+    // ########### SegmentMatch Test ############
+    TEST_F(SegmentMatchTest, computeOffsetsIdentical) {
+        SegmentMatch match;
+        match.segment1 = segmentsVecAns2_[0];
+        match.segment2 = segmentsVecAns2_[0];
+
+        LmStatus status = match.computeOffsets();
+
+        EXPECT_EQ(LM_STATUS_OK, status);
+        EXPECT_EQ(0, match.angleOffset);
+        EXPECT_EQ(Point2f(0,0), match.positionOffset);
+    }
+
+    TEST_F(SegmentMatchTest, computeOffsetsAngleValue) {
+        // Test angle offset only
+        SegmentMatch match;
+        match.segment1 = segmentsVecAutogen4_[0];
+        match.segment2 = segmentsVecAutogen5_[0];
+
+        match.computeOffsets();
+
+        EXPECT_EQ(M_PI_2, match.angleOffset);
+        
+    }
+
+    TEST_F(SegmentMatchTest, computeOffsetsAngleValidity) {
+        // Test angle offset validity only
+        EXPECT_STREQ("NOT_IMPLEMENTED", "TODO");
+    }
+
+    TEST_F(SegmentMatchTest, computeOffsetsPositionValue) {
+        // Test position offset value only
+        KeyLines movedLines = lines2_;
+        movedLines[0].endPointX += 10;
+        movedLines[0].startPointX += 10;
+        movedLines[0].pt += Point2f(10, 0);
+        movedLines[1].endPointX += 10;
+        movedLines[1].startPointX += 10;
+        movedLines[1].pt += Point2f(10, 0);
+
+        Segment movedSegment(movedLines[0]);
+        Segment temp(movedLines[1]);
+        movedSegment.join(temp);
+
+        SegmentMatch match;
+        match.segment1 = segmentsVecAns2_[0];
+        match.segment2 = movedSegment;
+        match.computeOffsets();
+
+        EXPECT_EQ(Point2f(10, 0), match.positionOffset);
+    }
+
+    TEST_F(SegmentMatchTest, computeOffsetsPositionValidity) {
+        
+        EXPECT_STREQ("NOT_IMPLEMENTED", "TODO");
+    }
+
+    TEST_F(SegmentMatchTest, computeOffsetsCombined) {
+        
+    }
     
 }
 

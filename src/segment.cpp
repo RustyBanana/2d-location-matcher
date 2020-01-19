@@ -106,7 +106,7 @@ namespace lm {
 
         // 4. TODO: Implement validity check based on std dev of displacements
 
-        positionOffset = avgDisplacement;
+        positionOffset = avgDisplacement + line2Pos - line1Pos;
 
     }
 
