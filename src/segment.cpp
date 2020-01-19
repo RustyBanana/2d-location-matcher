@@ -57,29 +57,26 @@ namespace lm {
 
         float meanAngle1 = angle1/segmentSize;
         float meanAngle2 = angle2/segmentSize;
+        angleOffset = meanAngle2 - meanAngle1;
 
         // Get the variance
-        angle1 = 0;
-        angle2 = 0;
+        float totalAngleVariance = 0;
         pLine1 = segment1.data_.cbegin();
         pLine2 = segment2.data_.cbegin();
         while (pLine1 != segment1.data_.cend()) {
-            float x;
+            float x, y;
             x = wrappi(pLine1->angle);
-            x = angleDiff(x, meanAngle1, M_PI);
-            angle1 += x*x;
-            x = wrappi(pLine2->angle);
-            x = angleDiff(x, meanAngle2, M_PI);
-            angle2 += x*x;
+            y = wrappi(pLine2->angle);
+            x = angleDiff(y-x, angleOffset, M_PI);
+            totalAngleVariance += x*x;
 
             pLine1++;
             pLine2++;
         }
 
-        float varAngle1 = angle1/(segmentSize-1);
-        float varAngle2 = angle2/(segmentSize-1);
+        float angleVariance = totalAngleVariance/(segmentSize-1);
+        float angleStdDev = sqrt(angleVariance);
         
-        angleOffset = meanAngle2 - meanAngle1;
         // TODO Validity check based on the std deviation of the angles
 
         // Get the position offset (naive aprproach)
@@ -97,8 +94,8 @@ namespace lm {
             Point2f d2 = (pLine2->pt - line2Pos);
 
              // 2. Use the angle offset to rotate each position vector so that their rotations should match. This makes it rotation invariant.
-             d1 = Point2f(  d1.x*cos(angleOffset) + d1.y*sin(angleOffset),
-                           -d1.x*sin(angleOffset) + d1.y*cos(angleOffset));
+             d1 = Point2f(  d1.x*cos(angleOffset) + d1.y*-sin(angleOffset),
+                            d1.x*sin(angleOffset) + d1.y*cos(angleOffset));
 
             displacements.push_back(d2 - d1);
 
