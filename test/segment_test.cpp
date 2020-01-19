@@ -250,7 +250,7 @@ namespace lm {
 
         match.computeOffsets();
 
-        EXPECT_EQ(M_PI_2, match.angleOffset);
+        EXPECT_NEAR(M_PI_4, match.angleOffset, 1e-5);
         
     }
 

@@ -36,6 +36,8 @@ namespace lm {
         if (segment1.data_.size() != segment2.data_.size()) {
             return LM_STATUS_SIZE_MISMATCH;
         }
+
+        LmStatus status = LM_STATUS_OK;
         int segmentSize = segment1.data_.size();
 
         // All angle calculations are done in the range [0, 180] because a line of angle -30deg is a duplicate of an angle of 150deg
@@ -99,6 +101,9 @@ namespace lm {
                            -d1.x*sin(angleOffset) + d1.y*cos(angleOffset));
 
             displacements.push_back(d2 - d1);
+
+            pLine1++;
+            pLine2++;
         }
 
         // 3. Take an average of the displacement vector from each line in segment1 to the corresponding line in segment2
@@ -108,6 +113,7 @@ namespace lm {
 
         positionOffset = avgDisplacement + line2Pos - line1Pos;
 
+        return status;
     }
 
     // ################### SEGMENT ###################
