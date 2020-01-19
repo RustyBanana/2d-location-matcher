@@ -103,6 +103,8 @@ namespace lm{
     };
 
     struct SegmentMatch {
+        static float angleThreshold;
+        static float positionThreshold;
         //SegmentMatch();
         Segment segment1;
         Segment segment2;

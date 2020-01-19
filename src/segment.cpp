@@ -32,6 +32,10 @@ namespace lm {
         return angleWeight * lengthWeight;
     }
 
+    // ######### SegmentMatch ############
+    float SegmentMatch::angleThreshold = M_PI * 5/180;
+    float SegmentMatch::positionThreshold = 5;
+
     LmStatus SegmentMatch::computeOffsets() {
         if (segment1.data_.size() != segment2.data_.size()) {
             return LM_STATUS_SIZE_MISMATCH;
@@ -107,8 +111,18 @@ namespace lm {
         Point2f avgDisplacement = accumulate(displacements.begin(), displacements.end(), Point2f(0, 0))/(segmentSize-1);
 
         // 4. TODO: Implement validity check based on std dev of displacements
+        // Calculate variance
+        float totalPositionVariance = accumulate(displacements.begin(), displacements.end(), 0.0f, [](float accumulator, Point2f pt) {
+            return accumulator + pt.x*pt.x + pt.y*pt.y;
+        });
+        float positionVariance = totalPositionVariance/segmentSize;
+        float positionStdDev = sqrt(positionVariance);
 
         positionOffset = avgDisplacement + line2Pos - line1Pos;
+
+        if (angleStdDev >= angleThreshold || positionStdDev >= positionThreshold) {
+            status = LM_STATUS_ERROR_MATCH_FAILED;
+        }
 
         return status;
     }
@@ -226,8 +240,9 @@ namespace lm {
                     SegmentMatch newMatch;
                     newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
                     newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
-                    newMatch.computeOffsets();
-                    matches.push_back(newMatch);
+                    if (newMatch.computeOffsets() == LM_STATUS_OK) {
+                        matches.push_back(newMatch);
+                    }
                 }
                 matchLength = 0;
             }
@@ -240,8 +255,9 @@ namespace lm {
             SegmentMatch newMatch;
             newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
             newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
-            newMatch.computeOffsets();
-            matches.push_back(newMatch);
+            if (newMatch.computeOffsets() == LM_STATUS_OK) {
+                matches.push_back(newMatch);
+            }
         }
     }
 

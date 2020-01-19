@@ -8,6 +8,7 @@ namespace lm {
         LM_STATUS_OK = 0,
         LM_STATUS_ERROR_GENERIC,
         LM_STATUS_ERROR_LINES_UNCONNECTED,
+        LM_STATUS_ERROR_MATCH_FAILED,
         LM_STATUS_SIZE_MISMATCH
     };
 
