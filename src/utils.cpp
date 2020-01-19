@@ -15,6 +15,7 @@ namespace lm{
         Point2f klVec = kl.getEndPoint() - kl.getStartPoint();
         kl.angle        = atan2(klVec.y, klVec.x);
         kl.lineLength   = sqrt(klVec.dot(klVec));
+        kl.pt = (kl.getStartPoint() + kl.getEndPoint())/2;
 
         return kl;
     }

@@ -22,7 +22,7 @@ namespace lm {
     }
 
     float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2, bool angleInvariant) {
-        const float lengthThreshold = 10;
+        const float lengthThreshold = 11;
         const float angleThreshold = M_PI * 10/180;
 
         float angleWeight = angleInvariant ? 1.0f : max(0.0f, 1 - abs(angleDiff(line1.angle, line2.angle))/angleThreshold);
@@ -197,8 +197,6 @@ namespace lm {
 
     template <typename Iterator>
     void getMatchIndexes(Iterator thisBegin, Iterator thisEnd, Iterator otherBegin, Iterator otherEnd, Mat likenessMatrix, bool angleInvariant=false) {
-        const float likenessThreshold = 0.4;
-
         int i = 0;
         int j = 0;
         for (auto thisLineItr = thisBegin; thisLineItr != thisEnd; thisLineItr++) {
@@ -257,6 +255,9 @@ namespace lm {
         Mat likenessMatrix = Mat(data_.size(), other.data_.size(), CV_32FC1);;
         getMatchIndexes(data_.cbegin(), data_.cend(), other.data_.cbegin(), other.data_.cend(), likenessMatrix, true);
 
+        cout << "Likeness Matrix" << endl;
+        cout << likenessMatrix << endl;
+
         int numRows = likenessMatrix.rows;
         int numCols = likenessMatrix.cols;
 
@@ -277,10 +278,10 @@ namespace lm {
 
         // Top right to bottom left diagonals
         for (int i = 0; i < numCols; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(-1, 1), 0.4, other, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(0, i), Point2i(1, -1), 0.4, other, matches);
         }
         for (int i = 1; i < numRows; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(numCols-1, i), Point2i(-1, 1), 0.4, other, matches);
+            findMatchesInDiag(likenessMatrix, Point2i(i, numCols-1), Point2i(1, -1), 0.4, other, matches);
         }
 
         return LM_STATUS_OK;
@@ -316,6 +317,16 @@ namespace lm {
 
         }
         */
+    }
+
+    void Segment::draw(InputOutputArray imgIn, Scalar color, string label) const {
+        for (auto lineItr = data_.cbegin(); lineItr != data_.cend(); lineItr++) {
+            const KeyLine& line = *lineItr;
+
+            cv::line(imgIn, line.getStartPoint(), line.getEndPoint(), color);
+            putText(imgIn, label, line.pt, FONT_HERSHEY_SIMPLEX , 1.0, color);
+        
+        }
     }
 
     // Getters and setters
@@ -362,6 +373,40 @@ namespace lm {
     LmStatus Segments::clear() {
         data_.clear();
         return LM_STATUS_OK;
+    }
+
+    LmStatus Segments::matchSegments(const Segments& segments, std::vector<SegmentMatch>& matches) {
+        for (auto otherSegmentItr = segments.data().cbegin(); otherSegmentItr != segments.data().cend(); otherSegmentItr++) {
+            Segment& otherSegment = **otherSegmentItr;
+
+            for (auto thisSegmentItr = data_.cbegin(); thisSegmentItr != data_.cend(); thisSegmentItr++) {
+                Segment& thisSegment = **thisSegmentItr;
+
+                thisSegment.compareWith(otherSegment, matches);
+            }
+        }
+
+        return LM_STATUS_OK;
+    }
+
+    void Segments::draw(cv::InputOutputArray imgIn) const {
+        srand(time(NULL));
+
+        int count = 0;
+        for (auto segmentItr = data_.cbegin(); segmentItr != data_.cend(); segmentItr++) {
+            Segment& segment = **segmentItr;
+
+            int r = rand() % 255 + 1;
+            int g = rand() % 255 + 1;
+            int b = rand() % 255 + 1;
+
+            Scalar color(b,g,r);
+            string label = to_string(count);
+
+            segment.draw(imgIn, color, label);
+            
+            count++;
+        }
     }
 
     const Segments::data_t& Segments::data() const {

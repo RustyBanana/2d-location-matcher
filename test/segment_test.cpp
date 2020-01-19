@@ -109,6 +109,13 @@ namespace lm {
         }
     };
 
+    class SegmentIntegrationTest : public BaseTest {
+        void SetUp() override {
+            BaseTest::SetUp();
+        }
+        
+    };
+
     TEST_F(SegmentTest, isJoinedToUnconnected) {
         EXPECT_EQ(SEGMENT_JOINT_NONE, segmentsVec1_[0].isJoinedTo(segmentsVec1_[1]));
     }
@@ -301,6 +308,52 @@ namespace lm {
 
         EXPECT_NEAR(expectedOffset.x, match.positionOffset.x, 1.0);
         EXPECT_NEAR(expectedOffset.y, match.positionOffset.y, 1.0);
+
+    }
+    
+    TEST_F(SegmentIntegrationTest, matchSectionToLongWall) {
+        // Matches an L shaped section to a 4 line section forming a staircase
+        Segments section, wall;
+        LmStatus status;
+        status = section.addLines(lines3_);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        status = wall.addLines(lines4_);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        vector<SegmentMatch> matches;
+        status = wall.matchSegments(section, matches);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        srand(time(NULL));
+
+        Mat img;
+        cvtColor(testImg4_, img, COLOR_GRAY2BGR);
+        int count = 0;
+        for (auto matchesItr = matches.cbegin(); matchesItr != matches.cend(); matchesItr++) {
+            const Segment& segment = matchesItr->segment1;
+
+            int r = rand() % 255 + 1;
+            int g = rand() % 255 + 1;
+            int b = rand() % 255 + 1;
+
+            Scalar color(b,g,r);
+            string label = to_string(count);
+
+            segment.draw(img, color, label);
+            //putText(img, "HELLO WORLD", Point(100, 20), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(b, g, r));
+            
+            count++;
+        }
+        imwrite("debug/matchSectionToLongWall.jpg", img);
+
+        // Check matches
+        ASSERT_EQ(3, matches.size());
+
+        Segments answer1, answer2, answer3;
+        answer1.addLines(KeyLines(lines4_.begin() + 0, lines4_.begin() + 2));
+        answer2.addLines(KeyLines(lines4_.begin() + 1, lines4_.begin() + 3));
+        answer3.addLines(KeyLines(lines4_.begin() + 2, lines4_.begin() + 4));
 
     }
     

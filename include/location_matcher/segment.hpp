@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numeric> // accumulate
+#include <time.h>   // For initializing random
 
 #include "opencv2/core.hpp"
 #include "opencv2/line_descriptor.hpp"
@@ -60,6 +61,7 @@ namespace lm{
         // Returns the k nearest best matches
         LmStatus compareWith(const Segment& other, std::vector<SegmentMatch>& matches) const;
 
+        void draw(cv::InputOutputArray imgIn, cv::Scalar color, std::string label) const;
 
 
         protected:
@@ -84,7 +86,11 @@ namespace lm{
         LmStatus clear();
 
         // Return k nearest neighbour matches sorted by match strength
-        LmStatus matchSegment(const Segment& segment, std::vector<SegmentMatch>& matches);
+        LmStatus matchSegments(const Segment& segment, std::vector<SegmentMatch>& matches);
+        
+        LmStatus matchSegments(const Segments& segments, std::vector<SegmentMatch>& matches);
+
+        void draw(cv::InputOutputArray imgIn) const;
 
         const data_t& data() const;
 
