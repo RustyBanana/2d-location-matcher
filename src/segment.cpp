@@ -36,24 +36,77 @@ namespace lm {
         if (segment1.data_.size() != segment2.data_.size()) {
             return LM_STATUS_SIZE_MISMATCH;
         }
+        int segmentSize = segment1.data_.size();
 
+        // All angle calculations are done in the range [0, 180] because a line of angle -30deg is a duplicate of an angle of 150deg
         float angle1 = 0;
         float angle2 = 0;
 
-        // Do an averaging operation for the angle of each point
+        // Get the mean
         auto pLine1 = segment1.data_.cbegin();
         auto pLine2 = segment2.data_.cbegin();
         while (pLine1 != segment1.data_.cend()) {
-            angle1 += pLine1->angle;
-            angle2 += pLine2->angle;
+            angle1 += wrappi(pLine1->angle);
+            angle2 += wrappi(pLine2->angle);
 
             pLine1++;
             pLine2++;
         }
-        angle1 /= segment1.data_.size();
-        angle2 /= segment2.data_.size();
 
-        // TODO implement angle offset and position offset
+        float meanAngle1 = angle1/segmentSize;
+        float meanAngle2 = angle2/segmentSize;
+
+        // Get the variance
+        angle1 = 0;
+        angle2 = 0;
+        pLine1 = segment1.data_.cbegin();
+        pLine2 = segment2.data_.cbegin();
+        while (pLine1 != segment1.data_.cend()) {
+            float x;
+            x = wrappi(pLine1->angle);
+            x = angleDiff(x, meanAngle1, M_PI);
+            angle1 += x*x;
+            x = wrappi(pLine2->angle);
+            x = angleDiff(x, meanAngle2, M_PI);
+            angle2 += x*x;
+
+            pLine1++;
+            pLine2++;
+        }
+
+        float varAngle1 = angle1/(segmentSize-1);
+        float varAngle2 = angle2/(segmentSize-1);
+        
+        angleOffset = meanAngle2 - meanAngle1;
+        // TODO Validity check based on the std deviation of the angles
+
+        // Get the position offset (naive aprproach)
+        // 1. Normalize the position vector of each line by doing it WRT the first line in the segment. This makes it translation invariant.
+        vector<Point2f> displacements;
+
+        pLine1 = segment1.data_.cbegin();
+        pLine2 = segment2.data_.cbegin();
+        Point2f line1Pos = pLine1->pt;
+        Point2f line2Pos = pLine2->pt;
+        pLine1++;
+        pLine2++;
+        while (pLine1 != segment1.data_.cend()) {
+            Point2f d1 = (pLine1->pt - line1Pos);
+            Point2f d2 = (pLine2->pt - line2Pos);
+
+             // 2. Use the angle offset to rotate each position vector so that their rotations should match. This makes it rotation invariant.
+             d1 = Point2f(  d1.x*cos(angleOffset) + d1.y*sin(angleOffset),
+                           -d1.x*sin(angleOffset) + d1.y*cos(angleOffset));
+
+            displacements.push_back(d2 - d1);
+        }
+
+        // 3. Take an average of the displacement vector from each line in segment1 to the corresponding line in segment2
+        Point2f avgDisplacement = accumulate(displacements.begin(), displacements.end(), Point2f(0, 0))/(segmentSize-1);
+
+        // 4. TODO: Implement validity check based on std dev of displacements
+
+        positionOffset = avgDisplacement;
 
     }
 
@@ -68,14 +121,26 @@ namespace lm {
     }
 
     Segment::Segment(const Segment& segment, int beginIndex, int endIndex) {
+        bool reverse = false;
+        if (endIndex < beginIndex) {
+            int temp = beginIndex;
+            beginIndex = endIndex;
+            endIndex = temp;
+
+            reverse = true;
+        }
+
         int i = 0;
-        auto pData = segment.data_.begin();
+        segment_t::const_iterator pData = segment.data_.cbegin();
         while (i < segment.data_.size()) {
             if (i >= beginIndex && i <= endIndex) {
                 data_.push_back(*pData);
             }
             pData++;
             i++;
+        }
+        if (reverse) {
+            data_.reverse();
         }
     }
 
@@ -194,13 +259,14 @@ namespace lm {
         for (int i = 0; i < numCols; i++) {
             findMatchesInDiag(likenessMatrix, Point2i(0, i), Point2i(1, 1), 0.4, other, matches);
         }
-        for (int i = 1; i < numRows; i++) {
-            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(1, 1), 0.4, other, matches);
-        }
 
         // Catch edge case of a 1x1 matrix
         if (numRows == 1 && numCols == 1) {
             return LM_STATUS_OK;
+        }
+
+        for (int i = 1; i < numRows; i++) {
+            findMatchesInDiag(likenessMatrix, Point2i(i, 0), Point2i(1, 1), 0.4, other, matches);
         }
 
         // Top right to bottom left diagonals

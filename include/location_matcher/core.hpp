@@ -16,20 +16,27 @@ namespace lm {
         return sqrt(diff.dot(diff));
     }
 
-    inline float wrappi(float angle) {
-        return fmod(angle, M_PI_2);
+    // Returns angle in the range [0, 2*pi] + offset
+    inline float wrap2pi(float angle, float offset=0) {
+        angle = fmod(angle + M_PI, 2*M_PI);
+        if (angle < 0) {
+            angle += 2 * M_PI;
+        }
+        return angle + offset;
     }
 
-    inline float wrap2pi(float angle) {
-        return fmod(angle, M_PI);
+    // Returns angle in the range [0, pi] + offset
+    inline float wrappi(float angle, float offset=0) {
+        angle = wrap2pi(angle);
+        return angle > M_PI ? angle - M_PI + offset: angle + offset;
     }
 
-    inline float angleDiff(float angle1, float angle2) {
+    inline float angleDiff(float angle1, float angle2, float wrapAngle = 2*M_PI) {
         float diff = angle1 - angle2;
-        if (abs(diff <= M_PI)) {
+        if (abs(diff <= wrapAngle/2)) {
             return diff;
         } else {
-            return  diff < 0 ? diff + 2 * M_PI : diff - 2 * M_PI;
+            return  diff < 0 ? diff + wrapAngle : diff - wrapAngle;
         }
     }
 
