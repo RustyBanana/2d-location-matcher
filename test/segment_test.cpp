@@ -286,8 +286,22 @@ namespace lm {
         EXPECT_STREQ("NOT_IMPLEMENTED", "TODO");
     }
 
-    TEST_F(SegmentMatchTest, computeOffsetsCombined) {
+    TEST_F(SegmentMatchTest, computeOffsetsCombinedPerfect) {
+        SegmentMatch match;
+        match.segment1 = segmentsVecAutogen4_[0];
+        match.segment2 = segmentsVecAutogen5_[0];
+
+        match.computeOffsets();
+
+        EXPECT_NEAR(M_PI_4, match.angleOffset, 1e-5);
         
+        Point2f pt1 = match.segment1.data().front().pt;
+        Point2f pt2 = match.segment2.data().front().pt;
+        Point2f expectedOffset = pt2 - pt1;
+
+        EXPECT_NEAR(expectedOffset.x, match.positionOffset.x, 1.0);
+        EXPECT_NEAR(expectedOffset.y, match.positionOffset.y, 1.0);
+
     }
     
 }
