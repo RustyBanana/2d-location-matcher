@@ -82,6 +82,7 @@ namespace lm{
         friend class SegmentsTest;
         typedef std::vector<std::shared_ptr<Segment>> data_t;
         public:
+        LmStatus addSegment(const Segment& segment);
         LmStatus addLines(const KeyLines& lines);
         LmStatus clear();
 
@@ -110,7 +111,9 @@ namespace lm{
         Segment segment2;
         cv::Point2f positionOffset;
         float angleOffset;
+        float confidence;
 
         LmStatus computeOffsets();
+        LmStatus computeConfidence();   // Unimplemented
     };
 };

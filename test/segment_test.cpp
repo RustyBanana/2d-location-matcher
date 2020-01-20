@@ -325,6 +325,15 @@ namespace lm {
         EXPECT_EQ(LM_STATUS_OK, status);
 
     }
+
+    void drawMatches(vector<SegmentMatch> matches, InputOutputArray img) {
+        Segments matchedSegments;
+        for (auto matchItr = matches.cbegin(); matchItr != matches.cend(); matchItr++) {
+            const SegmentMatch& match = *matchItr;
+            matchedSegments.addSegment(match.segment1);
+        }
+        matchedSegments.draw(img);
+    }
     
     TEST_F(SegmentIntegrationTest, matchSectionToLongWall) {
         // Matches an L shaped section to a 4 line section forming a staircase
@@ -344,24 +353,10 @@ namespace lm {
 
         Mat img;
         cvtColor(testImg4_, img, COLOR_GRAY2BGR);
-        int count = 0;
-        for (auto matchesItr = matches.cbegin(); matchesItr != matches.cend(); matchesItr++) {
-            const Segment& segment = matchesItr->segment1;
+        
+        drawMatches(matches, img);
 
-            int r = rand() % 255 + 1;
-            int g = rand() % 255 + 1;
-            int b = rand() % 255 + 1;
-
-            Scalar color(b,g,r);
-            string label = to_string(count);
-
-            segment.draw(img, color, label);
-            //putText(img, "HELLO WORLD", Point(100, 20), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(b, g, r));
-            
-            count++;
-        }
-        imwrite("debug/matchSectionToLongWall.jpg", img);
-
+        bool imwriteSuccess = imwrite("debug/matchSectionToLongWall2.jpg", img);
         // Check matches
         ASSERT_EQ(3, matches.size());
 
@@ -370,6 +365,40 @@ namespace lm {
         answer2.addLines(KeyLines(lines4_.begin() + 1, lines4_.begin() + 3));
         answer3.addLines(KeyLines(lines4_.begin() + 2, lines4_.begin() + 4));
 
+        EXPECT_EQ(true, imwriteSuccess);
+    }
+
+    TEST_F(SegmentIntegrationTest, matchSectionToLongWallRot45) {
+        // Matches an L shaped section to a 4 line section forming a staircase
+        Segments section, wall;
+        LmStatus status;
+        status = section.addLines(lines3_);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        status = wall.addLines(lines5_);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        vector<SegmentMatch> matches;
+        status = wall.matchSegments(section, matches);
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+        srand(time(NULL));
+
+        Mat img;
+        cvtColor(testImg5_, img, COLOR_GRAY2BGR);
+        
+        drawMatches(matches, img);
+
+        bool imwriteSuccess = imwrite("debug/matchSectionToLongWallRot45.jpg", img);
+        // Check matches
+        ASSERT_EQ(3, matches.size());
+
+        Segments answer1, answer2, answer3;
+        answer1.addLines(KeyLines(lines5_.begin() + 0, lines5_.begin() + 2));
+        answer2.addLines(KeyLines(lines5_.begin() + 1, lines5_.begin() + 3));
+        answer3.addLines(KeyLines(lines5_.begin() + 2, lines5_.begin() + 4));
+
+        EXPECT_EQ(true, imwriteSuccess);
     }
     
 }

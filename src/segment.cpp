@@ -357,6 +357,12 @@ namespace lm {
 
     // ############ SEGMENTS ############
 
+    LmStatus Segments::addSegment(const Segment& segment) {
+        shared_ptr<Segment> newSegment(new Segment(segment));
+        data_.push_back(newSegment);
+        return LM_STATUS_OK;
+    }
+
     LmStatus Segments::addLines(const KeyLines& lines) {
         // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
         
