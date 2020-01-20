@@ -34,10 +34,13 @@ namespace lm {
 
     inline float angleDiff(float angle1, float angle2, float wrapAngle = 2*M_PI) {
         float diff = angle1 - angle2;
-        if (abs(diff <= wrapAngle/2)) {
+        const float tolerance = 1e-5;
+        if (abs(abs(diff) - wrapAngle/2) <= tolerance) {
+            return wrapAngle/2; // Rounding off both -wrapAngle/2 and wrapAngle/2 to the same value.
+        } else if (abs(diff) <= wrapAngle/2) {
             return diff;
         } else {
-            return  diff < 0 ? diff + wrapAngle : diff - wrapAngle;
+            return diff < 0 ? diff + wrapAngle : diff - wrapAngle;
         }
     }
 

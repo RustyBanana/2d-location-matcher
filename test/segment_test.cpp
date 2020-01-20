@@ -310,6 +310,21 @@ namespace lm {
         EXPECT_NEAR(expectedOffset.y, match.positionOffset.y, 1.0);
 
     }
+
+    TEST_F(SegmentMatchTest, computeOffsetsMirrored) {
+        Segment seg1, seg2;
+        seg1 = segmentsVecAutogen3_[0];
+        seg2 = Segment(segmentsVecAutogen4_[0], 2, 1);
+
+        SegmentMatch match;
+        match.segment1 = seg1;
+        match.segment2 = seg2;
+
+        LmStatus status = match.computeOffsets();
+
+        EXPECT_EQ(LM_STATUS_OK, status);
+
+    }
     
     TEST_F(SegmentIntegrationTest, matchSectionToLongWall) {
         // Matches an L shaped section to a 4 line section forming a staircase

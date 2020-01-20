@@ -36,6 +36,7 @@ namespace lm {
     float SegmentMatch::angleThreshold = M_PI * 5/180;
     float SegmentMatch::positionThreshold = 5;
 
+
     LmStatus SegmentMatch::computeOffsets() {
         if (segment1.data_.size() != segment2.data_.size()) {
             return LM_STATUS_SIZE_MISMATCH;
@@ -45,23 +46,21 @@ namespace lm {
         int segmentSize = segment1.data_.size();
 
         // All angle calculations are done in the range [0, 180] because a line of angle -30deg is a duplicate of an angle of 150deg
-        float angle1 = 0;
-        float angle2 = 0;
 
         // Get the mean
+        float totalAngleMean = 0;
         auto pLine1 = segment1.data_.cbegin();
         auto pLine2 = segment2.data_.cbegin();
         while (pLine1 != segment1.data_.cend()) {
-            angle1 += wrappi(pLine1->angle);
-            angle2 += wrappi(pLine2->angle);
+            float angle1 = wrappi(pLine1->angle);
+            float angle2 = wrappi(pLine2->angle);
+
+            totalAngleMean += angleDiff(angle2, angle1, M_PI);
 
             pLine1++;
             pLine2++;
         }
-
-        float meanAngle1 = angle1/segmentSize;
-        float meanAngle2 = angle2/segmentSize;
-        angleOffset = meanAngle2 - meanAngle1;
+        angleOffset = totalAngleMean/segmentSize;
 
         // Get the variance
         float totalAngleVariance = 0;
@@ -86,6 +85,7 @@ namespace lm {
         // Get the position offset (naive aprproach)
         // 1. Normalize the position vector of each line by doing it WRT the first line in the segment. This makes it translation invariant.
         vector<Point2f> displacements;
+        vector<Point2f> mirroredDisplacements;
 
         pLine1 = segment1.data_.cbegin();
         pLine2 = segment2.data_.cbegin();
@@ -97,11 +97,14 @@ namespace lm {
             Point2f d1 = (pLine1->pt - line1Pos);
             Point2f d2 = (pLine2->pt - line2Pos);
 
-             // 2. Use the angle offset to rotate each position vector so that their rotations should match. This makes it rotation invariant.
-             d1 = Point2f(  d1.x*cos(angleOffset) + d1.y*-sin(angleOffset),
+            // 2. Use the angle offset to rotate each position vector so that their rotations should match. This makes it rotation invariant.
+            d1 = Point2f(  d1.x*cos(angleOffset) + d1.y*-sin(angleOffset),
                             d1.x*sin(angleOffset) + d1.y*cos(angleOffset));
-
             displacements.push_back(d2 - d1);
+
+            // Get mirrored displacements by mirroring one segment, ie switching y = x and rotating 180deg
+            d2 = Point2f(-d2.y, -d2.x);
+            mirroredDisplacements.push_back(d2 - d1);
 
             pLine1++;
             pLine2++;
@@ -109,13 +112,18 @@ namespace lm {
 
         // 3. Take an average of the displacement vector from each line in segment1 to the corresponding line in segment2
         Point2f avgDisplacement = accumulate(displacements.begin(), displacements.end(), Point2f(0, 0))/(segmentSize-1);
+        Point2f avgMirroredDisplacement = accumulate(mirroredDisplacements.begin(), mirroredDisplacements.end(), Point2f(0, 0))/(segmentSize-1);
 
         // 4. TODO: Implement validity check based on std dev of displacements
         // Calculate variance
         float totalPositionVariance = accumulate(displacements.begin(), displacements.end(), 0.0f, [](float accumulator, Point2f pt) {
             return accumulator + pt.x*pt.x + pt.y*pt.y;
         });
-        float positionVariance = totalPositionVariance/segmentSize;
+        float totalMirroredPositionVariance = accumulate(mirroredDisplacements.begin(), mirroredDisplacements.end(), 0.0f, [](float accumulator, Point2f pt) {
+            return accumulator + pt.x*pt.x + pt.y*pt.y;
+        });
+
+        float positionVariance = min(totalPositionVariance, totalMirroredPositionVariance)/segmentSize;
         float positionStdDev = sqrt(positionVariance);
 
         positionOffset = avgDisplacement + line2Pos - line1Pos;
