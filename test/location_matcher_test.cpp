@@ -32,9 +32,10 @@ namespace lm {
 
     void EXPECT_EQ_LOCATION_MATCH(const LocationMatch& ans, const LocationMatch& test) {
         EXPECT_EQ(ans.name, test.name);
-        EXPECT_EQ(ans.angle, test.angle);
-        EXPECT_EQ(ans.position.x, test.position.x);
-        EXPECT_EQ(ans.position.y, test.position.y);
+        EXPECT_NEAR(ans.angle, test.angle, M_PI*5/180);
+        EXPECT_NEAR(ans.position.x, test.position.x, 3.0);
+        EXPECT_NEAR(ans.position.y, test.position.y, 3.0
+        );
     }
 
     TEST_F(LocationMatcherTest, matchLToLongWall) {
