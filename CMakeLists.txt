@@ -63,6 +63,14 @@ target_link_libraries(segment
   ${OpenCV_LIBS}
 )
 
+add_library(location_matcher src/location_matcher.cpp)
+target_link_libraries(location_matcher
+  ${OpenCV_LIBS}
+  line_detector
+  line_filter
+  segment
+)
+
 ## === Tests === 
 add_library(test_datasets test/test_datasets.cpp)
 target_link_libraries(test_datasets
@@ -91,6 +99,14 @@ add_test(NAME lineFilterTest COMMAND line_filter_test)
 add_executable(segment_test test/segment_test.cpp)
 target_link_libraries(segment_test
   segment
+  test_datasets
+  gtest_main
+)
+add_test(NAME segmentTest COMMAND segment_test)
+
+add_executable(location_matcher_test test/location_matcher_test.cpp)
+target_link_libraries(location_matcher_test
+  location_matcher
   test_datasets
   gtest_main
 )

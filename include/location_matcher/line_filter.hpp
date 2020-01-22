@@ -10,6 +10,7 @@ namespace lm {
     class LineFilter {
         friend class LineFilterTest;
         public:
+        LineFilter();
         LineFilter(double minLineLength, double maxLineLength);
         ~LineFilter();
 

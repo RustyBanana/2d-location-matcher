@@ -20,7 +20,11 @@ namespace lm {
         bdParams_ = bdParams;
         lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
 #endif
-    }      
+    } 
+
+    LineDetector::~LineDetector() {
+        
+    }     
     
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines) {
         cv::Mat mask = cv::Mat::ones(imgIn.size(), CV_8UC1);

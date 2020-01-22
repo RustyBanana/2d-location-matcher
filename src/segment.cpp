@@ -36,6 +36,19 @@ namespace lm {
     float SegmentMatch::angleThreshold = M_PI * 5/180;
     float SegmentMatch::positionThreshold = 5;
 
+    SegmentMatch::SegmentMatch() {
+        
+    }
+
+    SegmentMatch::SegmentMatch(Segment seg1, int startIndex1, int endIndex1, Segment seg2, int startIndex2, int endIndex2) {
+        
+        segment1 = Segment(seg1, startIndex1, endIndex1);
+        segment1Index[0] = min(startIndex1, endIndex1);
+        segment1Index[1] = max(startIndex1, endIndex1);
+        segment2 = Segment(seg2, startIndex2, endIndex2);
+        segment2Index[0] = min(startIndex2, endIndex2);
+        segment2Index[1] = max(startIndex2, endIndex2);
+    }
 
     LmStatus SegmentMatch::computeOffsets() {
         if (segment1.data_.size() != segment2.data_.size()) {
@@ -234,6 +247,7 @@ namespace lm {
         int numCols = likenessMatrix.cols;
         int matchLength = 0;
         int minMatchLength = 2;
+
         currIndex = startIndex;
         while ( currIndex.y >= 0 && currIndex.y < numCols && 
             currIndex.x >= 0 && currIndex.x < numRows) {
@@ -245,9 +259,7 @@ namespace lm {
             } else {
                 if (matchLength >= minMatchLength) {
                     // Matches for current segment ended. Create a segment from prevMatch to prevIndex
-                    SegmentMatch newMatch;
-                    newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
-                    newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
+                    SegmentMatch newMatch(*this, prevMatch.x, prevIndex.x, other, prevMatch.y, prevIndex.y);
                     if (newMatch.computeOffsets() == LM_STATUS_OK) {
                         matches.push_back(newMatch);
                     }
@@ -260,9 +272,7 @@ namespace lm {
 
         if (matchLength >= minMatchLength) {
             // Matches for current segment ended. Create a segment from prevMatch to prevIndex
-            SegmentMatch newMatch;
-            newMatch.segment1 = Segment(*this, prevMatch.x, prevIndex.x);
-            newMatch.segment2 = Segment(other, prevMatch.y, prevIndex.y);
+            SegmentMatch newMatch(*this, prevMatch.x, prevIndex.x, other, prevMatch.y, prevIndex.y);
             if (newMatch.computeOffsets() == LM_STATUS_OK) {
                 matches.push_back(newMatch);
             }
@@ -367,32 +377,30 @@ namespace lm {
         // Create a segment from each line and compare with existing segments to see if they match. Join if they do, else create new segment
         
         // True if the segment is unique, false if segment has been merged elsewhere
-        vector<bool> keepSegments;
+        vector<bool> isUnique(data_.size(), true);
+
         for (auto lineItr = lines.cbegin(); lineItr != lines.cend(); lineItr++) {
             shared_ptr<Segment> lineSegment(new Segment(*lineItr));
             bool joinedToExistingSegment = false;
 
+            int segmentCount = 0;
             for (auto segmentItr = data_.begin(); segmentItr != data_.end(); segmentItr++) {
-                shared_ptr<Segment>& pSegment = *segmentItr;
-                if (lineSegment->join(*pSegment) == LM_STATUS_OK) {
-                    // Successful join operation; update pSegment to the new segment and continue because it is possible for a single line to connect to two segments
-                    pSegment = lineSegment;
-                    joinedToExistingSegment = true;
-                    keepSegments.push_back(false);
-                } else {
-                    keepSegments.push_back(true);
+                if (isUnique[segmentCount]) {
+                    shared_ptr<Segment>& pSegment = *segmentItr;
+                    if (lineSegment->join(*pSegment) == LM_STATUS_OK) {
+                        // Successful join operation; update pSegment to the new segment and continue because it is possible for a single line to connect to two segments
+                        pSegment = lineSegment;
+                        joinedToExistingSegment = true;
+                        isUnique[segmentCount] = false;
+                    }
                 }
+                segmentCount++;
             }
 
-            if (!joinedToExistingSegment) {
-                data_.push_back(lineSegment);
-                // Catch edge case
-                if (lineItr == lines.cend() - 1) {
-                    keepSegments.push_back(true);
-                }
-            }
+            data_.push_back(lineSegment);
+            isUnique.push_back(true);
         }
-        pruneSegments(keepSegments);
+        pruneSegments(isUnique);
 
         return LM_STATUS_OK;
     }
@@ -452,5 +460,6 @@ namespace lm {
             pSegmentItr++;
             keepItr++;
         }
+        data_ = prunedSegments;
     }
 }

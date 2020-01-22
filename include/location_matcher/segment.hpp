@@ -86,7 +86,8 @@ namespace lm{
         LmStatus addLines(const KeyLines& lines);
         LmStatus clear();
 
-        // Return k nearest neighbour matches sorted by match strength
+        // Return k nearest neighbour matches sorted by match strength.
+        // Returns SegmentMatch with segment1 from this Segments, and segment2 from the other Segments
         LmStatus matchSegments(const Segment& segment, std::vector<SegmentMatch>& matches);
         
         LmStatus matchSegments(const Segments& segments, std::vector<SegmentMatch>& matches);
@@ -106,9 +107,13 @@ namespace lm{
     struct SegmentMatch {
         static float angleThreshold;
         static float positionThreshold;
-        //SegmentMatch();
+        SegmentMatch();
+        SegmentMatch(Segment seg1, int startIndex1, int endIndex1, Segment seg2, int startIndex2, int endIndex2);
+
         Segment segment1;
         Segment segment2;
+        int segment1Index[2];   // segment1 is constructed from copying the original segment from segment1Index[0] to segment1Index[1]
+        int segment2Index[2];
         cv::Point2f positionOffset;
         float angleOffset;
         float confidence;

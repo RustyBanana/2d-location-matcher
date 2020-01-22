@@ -2,6 +2,7 @@
 #include "location_matcher/core.hpp"
 #include "location_matcher/line_detector.hpp"
 #include "location_matcher/line_filter.hpp"
+#include "location_matcher/segment.hpp"
 
 namespace lm {
 
@@ -15,10 +16,13 @@ namespace lm {
     struct LocationMatch {
         std::string name;
         cv::Point2f position;   // pixel position of the blueprint's centroid in the search image
+        double angle;           // Angle by which the blueprint is rotated to fit onto the found match
         double certainty;
     };
 
+    class LocationMatcherTest;
     class LocationMatcher {
+        friend class LocationMatcherTest;
         public:
         LocationMatcher();
         ~LocationMatcher();
@@ -47,15 +51,23 @@ namespace lm {
 
         // Input: occupancy map as a 2D matrix with values closer to 0 as occupied, and 255 as free
         LmStatus findMatch(const cv::Mat& imageIn, std::vector<LocationMatch>& matchesOut);
+
+        // Input: mask of 255 in areas which have been explored and hence cannot contain a line, and 0 in unexplored areas or obstructed areas
+        LmStatus filterMatches(const cv::Mat& mask, std::vector<LocationMatch>& matchesInOut);
         
         LmStatus addBlueprint(const Blueprint& blueprint);
+
+        void drawMatch(cv::Mat img, const LocationMatch& match)  const;
 
         std::map<std::string, Blueprint> blueprints_;
 
         LineDetector lineDetector_;
         LineFilter lineFilter_;
 
-        private:
+        LocationMatch segmentMatchToLocationMatch(const Blueprint& blueprint, const SegmentMatch& match) const;
+        
+        protected:
+        
         
     };
 };

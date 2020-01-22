@@ -6,8 +6,17 @@ using namespace cv::line_descriptor;
 
 namespace lm {
 
+    LineFilter::LineFilter() {
+        minLineLength_ = 0;
+        maxLineLength_ = 0;
+    }
+
     LineFilter::LineFilter(double minLineLength, double maxLineLength) : minLineLength_(minLineLength), maxLineLength_(maxLineLength) {
 
+    }
+
+    LineFilter::~LineFilter() {
+        
     }
 
     LmStatus LineFilter::filterByLine(const Mat& imgIn, Mat& imgOut, KeyLinesIn lines,  const int lineThickness) {
