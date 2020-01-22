@@ -5,21 +5,6 @@ using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {
-    
-    LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
-                         const cv::line_descriptor::KeyLine& line2,
-                         float distThreshold) {
-        Point2f start1(line1.startPointX, line1.startPointY);
-        Point2f start2(line2.startPointX, line2.startPointY);
-        Point2f end1(line1.endPointX, line1.endPointY);
-        Point2f end2(line2.endPointX, line2.endPointY);
-        
-        return dist(start1, start2) <= distThreshold ? LINE_JOINT_SS :
-               dist(start1, end2)   <= distThreshold ? LINE_JOINT_SE :
-               dist(end1,   start2) <= distThreshold ? LINE_JOINT_ES :
-               dist(end1,   end2)   <= distThreshold ? LINE_JOINT_EE :
-               LINE_JOINT_NONE;
-    }
 
     float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2, bool angleInvariant) {
         const float lengthThreshold = 11;
@@ -136,7 +121,15 @@ namespace lm {
             return accumulator + pt.x*pt.x + pt.y*pt.y;
         });
 
-        float positionVariance = min(totalPositionVariance, totalMirroredPositionVariance)/segmentSize;
+        float positionVariance;
+        if (totalPositionVariance < totalMirroredPositionVariance) {
+            positionVariance = totalPositionVariance/(segmentSize-1);
+            isFlipped = false;
+        } else {
+            positionVariance = totalMirroredPositionVariance/(segmentSize-1);
+            isFlipped = true;
+        }
+        
         float positionStdDev = sqrt(positionVariance);
 
         positionOffset = avgDisplacement + line2Pos - line1Pos;

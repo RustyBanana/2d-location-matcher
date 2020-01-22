@@ -17,7 +17,6 @@ namespace lm {
     bool KeyLineCompare(const KeyLine& line1, const KeyLine& line2);
 
     void EXPECT_KEYLINE_EQUAL(const KeyLine& expected, const KeyLine& actual);
-
     void EXPECT_KEYLINES_EQUAL(const KeyLines& expected_, const KeyLines& actual_);
 
     class BaseTest : public ::testing::Test{

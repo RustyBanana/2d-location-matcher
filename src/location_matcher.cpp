@@ -77,6 +77,7 @@ namespace lm {
         KeyLine blueprintStartLine = match.segment2.data().front();
         KeyLine imageStartLine = match.segment1.data().front();
         Point2f lineToCentroid = blueprint.centroid - blueprintStartLine.pt;
+        lineToCentroid = rotateVector(lineToCentroid, locationMatch.angle);
         Point2f centroid = imageStartLine.pt + lineToCentroid;
         locationMatch.position = centroid;
 

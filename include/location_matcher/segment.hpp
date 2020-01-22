@@ -7,6 +7,7 @@
 #include "opencv2/line_descriptor.hpp"
 
 #include "location_matcher/core.hpp"
+#include "location_matcher/utils.hpp"
 
 namespace lm{
     // F = Front, B = Back
@@ -21,21 +22,9 @@ namespace lm{
     const int SEGMENT_JOINT_2 = 1;
     const int SEGMENT_JOINT_JOINED = 0;
 
-    enum LineJoint {
-        LINE_JOINT_NONE     = 0b000,
-        LINE_JOINT_SS       = 0b001,
-        LINE_JOINT_SE       = 0b011, 
-        LINE_JOINT_ES       = 0b101,
-        LINE_JOINT_EE       = 0b111
-    };
-
     class Segment;
     class Segments;
     struct SegmentMatch;
-
-    LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
-                         const cv::line_descriptor::KeyLine& line2,
-                         float distThreshold);
                         
     // Compares the likeness of two lines, with 1.0 being the same, 0 being completely different.
     float compareLines(const cv::line_descriptor::KeyLine& line1, const cv::line_descriptor::KeyLine& line2, bool angleInvariont=false);
@@ -116,6 +105,7 @@ namespace lm{
         int segment2Index[2];
         cv::Point2f positionOffset;
         float angleOffset;
+        bool isFlipped;
         float confidence;
 
         LmStatus computeOffsets();

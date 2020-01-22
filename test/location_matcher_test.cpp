@@ -18,7 +18,7 @@ namespace lm {
             BaseTest::SetUp();
 
             bp4_.blueprintImg = testImg3_;
-            bp4_.centroid = Point2f(48, 56);
+            bp4_.centroid = Point2f(56,48);
             bp4_.name = "L section";
             bp4_.scale = 0.05;
 
@@ -55,7 +55,7 @@ namespace lm {
             matcher.drawMatch(img, *matchItr);
         }
 
-        imwrite("debug/LocationMatcher_matchLToLongWall", img);
+        imwrite("debug/LocationMatcher_matchLToLongWall.jpg", img);
     }
 
     TEST_F(LocationMatcherTest, segmentMatchToLocationMatch) {
@@ -79,9 +79,9 @@ namespace lm {
         lm1.name = bp4_.name;
         lm2.name = bp4_.name;
         lm3.name = bp4_.name;
-        lm1.position = Point2f(48, 56);
-        lm2.position = Point2f(48, 105);
-        lm3.position = Point2f(116,105);
+        lm1.position = Point2f(56, 48);
+        lm2.position = Point2f(56, 105);
+        lm3.position = Point2f(116, 105);
         lm1.angle = 0;
         lm2.angle = M_PI;
         lm3.angle = 0;
@@ -93,6 +93,14 @@ namespace lm {
         for (int i = 0; i < 3; i++) {
             EXPECT_EQ_LOCATION_MATCH(ansLocationMatches[i], locationMatches[i]);
         }
+
+        Mat img = testImg4_.clone();
+
+        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
+            matcher.drawMatch(img, *matchItr);
+        }
+
+        imwrite("debug/LocationMatcher_matchLToLongWall.jpg", img);
     }
 
     

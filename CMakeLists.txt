@@ -61,6 +61,7 @@ target_link_libraries(line_filter
 add_library(segment src/segment.cpp)
 target_link_libraries(segment
   ${OpenCV_LIBS}
+  lm_utils
 )
 
 add_library(location_matcher src/location_matcher.cpp)
@@ -69,6 +70,7 @@ target_link_libraries(location_matcher
   line_detector
   line_filter
   segment
+  lm_utils
 )
 
 ## === Tests === 

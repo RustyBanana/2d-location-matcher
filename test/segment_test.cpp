@@ -18,6 +18,14 @@ namespace lm {
 
         auto pSeg1 = seg1.data().cbegin();
         auto pSeg2 = seg2.data().cbegin();
+
+        // Reverse seg2 if the first line in seg1 and seg2 don't match.
+        LineJoint lj = isJoinedTo(seg1.data().front(), seg2.data().front(), 6);
+        if (lj == LINE_JOINT_NONE) {
+            pSeg2 = seg2.data().crbegin().base();
+            pSeg2++; // Increment1 becase crbegin() is the same as cend();
+        }
+
         while (pSeg1 != seg1.data().cend()) {
             EXPECT_KEYLINE_EQUAL(*pSeg1, *pSeg2);
             pSeg1++;
@@ -323,7 +331,8 @@ namespace lm {
         LmStatus status = match.computeOffsets();
 
         EXPECT_EQ(LM_STATUS_OK, status);
-
+        EXPECT_NEAR(0, match.angleOffset, 1e-5);
+        EXPECT_EQ(true, match.isFlipped);
     }
 
     void drawMatches(vector<SegmentMatch> matches, InputOutputArray img) {
@@ -360,10 +369,23 @@ namespace lm {
         // Check matches
         ASSERT_EQ(3, matches.size());
 
+        // match0 is bottom right, match1 is top left, match2 is flipped middle
         Segments answer1, answer2, answer3;
         answer1.addLines(KeyLines(lines4_.begin() + 0, lines4_.begin() + 2));
         answer2.addLines(KeyLines(lines4_.begin() + 1, lines4_.begin() + 3));
         answer3.addLines(KeyLines(lines4_.begin() + 2, lines4_.begin() + 4));
+        
+        EXPECT_SEGMENT_EQUAL(*answer1.data().front(), matches[1].segment1);
+        EXPECT_SEGMENT_EQUAL(*answer2.data().front(), matches[2].segment1);
+        EXPECT_SEGMENT_EQUAL(*answer3.data().front(), matches[0].segment1);
+
+        EXPECT_NEAR(0, matches[0].angleOffset, 1e-4);
+        EXPECT_NEAR(0, matches[1].angleOffset, 1e-4);
+        EXPECT_NEAR(0, matches[2].angleOffset, 1e-4);
+
+        EXPECT_EQ(false, matches[0].isFlipped);
+        EXPECT_EQ(false, matches[1].isFlipped);
+        EXPECT_EQ(true, matches[2].isFlipped);
 
         EXPECT_EQ(true, imwriteSuccess);
     }
@@ -397,6 +419,18 @@ namespace lm {
         answer1.addLines(KeyLines(lines5_.begin() + 0, lines5_.begin() + 2));
         answer2.addLines(KeyLines(lines5_.begin() + 1, lines5_.begin() + 3));
         answer3.addLines(KeyLines(lines5_.begin() + 2, lines5_.begin() + 4));
+        
+        EXPECT_SEGMENT_EQUAL(*answer1.data().front(), matches[1].segment1);
+        EXPECT_SEGMENT_EQUAL(*answer2.data().front(), matches[2].segment1);
+        EXPECT_SEGMENT_EQUAL(*answer3.data().front(), matches[0].segment1);
+
+        EXPECT_NEAR(-M_PI_4, matches[0].angleOffset, 1e-4);
+        EXPECT_NEAR(-M_PI_4, matches[1].angleOffset, 1e-4);
+        EXPECT_NEAR(-M_PI_4, matches[2].angleOffset, 1e-4);
+
+        EXPECT_EQ(false, matches[0].isFlipped);
+        EXPECT_EQ(false, matches[1].isFlipped);
+        EXPECT_EQ(true, matches[2].isFlipped);
 
         EXPECT_EQ(true, imwriteSuccess);
     }

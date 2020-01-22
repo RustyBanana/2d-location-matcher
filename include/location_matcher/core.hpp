@@ -12,6 +12,14 @@ namespace lm {
         LM_STATUS_SIZE_MISMATCH
     };
 
+    enum LineJoint {
+        LINE_JOINT_NONE     = 0b000,
+        LINE_JOINT_SS       = 0b001,
+        LINE_JOINT_SE       = 0b011, 
+        LINE_JOINT_ES       = 0b101,
+        LINE_JOINT_EE       = 0b111
+    };
+
     inline float dist(cv::Point2f pt1, cv::Point2f pt2) {
         cv::Point2f diff = pt2 - pt1;
         return sqrt(diff.dot(diff));

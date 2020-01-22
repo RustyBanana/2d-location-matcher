@@ -3,6 +3,7 @@
 #include "location_matcher/line_detector.hpp"
 #include "location_matcher/line_filter.hpp"
 #include "location_matcher/segment.hpp"
+#include "location_matcher/utils.hpp"
 
 namespace lm {
 
@@ -65,7 +66,7 @@ namespace lm {
         LineFilter lineFilter_;
 
         LocationMatch segmentMatchToLocationMatch(const Blueprint& blueprint, const SegmentMatch& match) const;
-        
+
         protected:
         
         
