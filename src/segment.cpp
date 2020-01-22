@@ -60,6 +60,18 @@ namespace lm {
         }
         angleOffset = totalAngleMean/segmentSize;
 
+        // Check if the thing is rotated by over [180 -> 360 deg] by checking the direction from line1 to line2 in both segments
+        pLine1 = segment1.data_.cbegin();
+        pLine2 = segment2.data_.cbegin();
+        Point2f pt11 = pLine1->pt;
+        pLine1++;
+        Point2f pt12 = pLine1->pt;
+        Point2f pt21 = pLine2->pt;
+        pLine2++;
+        Point2f pt22 = pLine2->pt;
+        Point2f vec1 = pt12 - pt11;
+        Point2f vec2 = pt22 - pt21;
+
         // Get the variance
         float totalAngleVariance = 0;
         pLine1 = segment1.data_.cbegin();

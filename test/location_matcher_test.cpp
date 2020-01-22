@@ -86,9 +86,9 @@ namespace lm {
         lm2.angle = M_PI;
         lm3.angle = 0;
 
+        ansLocationMatches.push_back(lm3);
         ansLocationMatches.push_back(lm1);
         ansLocationMatches.push_back(lm2);
-        ansLocationMatches.push_back(lm3);
 
         for (int i = 0; i < 3; i++) {
             EXPECT_EQ_LOCATION_MATCH(ansLocationMatches[i], locationMatches[i]);
