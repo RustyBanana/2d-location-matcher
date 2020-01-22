@@ -43,59 +43,79 @@ namespace lm {
         LmStatus status = LM_STATUS_OK;
         int segmentSize = segment1.data_.size();
 
-        // All angle calculations are done in the range [0, 180] because a line of angle -30deg is a duplicate of an angle of 150deg
-
-        // Get the mean
-        float totalAngleMean = 0;
         auto pLine1 = segment1.data_.cbegin();
         auto pLine2 = segment2.data_.cbegin();
+
+        // ### Angle calculations ###
+        // Mean angle by turning angles to vectors on the unit circle
+        vector<Point2f> angles;
+        Point2f prevPt1 = (pLine1++)->pt;
+        Point2f prevPt2 = (pLine2++)->pt;
         while (pLine1 != segment1.data_.cend()) {
-            float angle1 = wrappi(pLine1->angle);
-            float angle2 = wrappi(pLine2->angle);
+            // Get the vector from previous point to this point
+            Point2f vec1 = (pLine1++)->pt - prevPt1;
+            Point2f vec2 = (pLine2++)->pt - prevPt2;
 
-            totalAngleMean += angleDiff(angle2, angle1, M_PI);
+            // Normalize vectors
+            float angle1 = atan2(vec1.y, vec1.x);
+            float angle2 = atan2(vec2.y, vec2.x);
+            float angleDiff = angle2 - angle1;
 
-            pLine1++;
-            pLine2++;
-        }
-        angleOffset = totalAngleMean/segmentSize;
+            Point2f angleVec(cos(angleDiff), sin(angleDiff));
 
-        // Check if the thing is rotated by over [180 -> 360 deg] by checking the direction from line1 to line2 in both segments
-        pLine1 = segment1.data_.cbegin();
-        pLine2 = segment2.data_.cbegin();
-        Point2f pt11 = pLine1->pt;
-        pLine1++;
-        Point2f pt12 = pLine1->pt;
-        Point2f pt21 = pLine2->pt;
-        pLine2++;
-        Point2f pt22 = pLine2->pt;
-        Point2f vec1 = pt12 - pt11;
-        Point2f vec2 = pt22 - pt21;
-
-        // Get the variance
-        float totalAngleVariance = 0;
-        pLine1 = segment1.data_.cbegin();
-        pLine2 = segment2.data_.cbegin();
-        while (pLine1 != segment1.data_.cend()) {
-            float x, y;
-            x = wrappi(pLine1->angle);
-            y = wrappi(pLine2->angle);
-            x = angleDiff(y-x, angleOffset, M_PI);
-            totalAngleVariance += x*x;
-
-            pLine1++;
-            pLine2++;
+            angles.push_back(angleVec);
         }
 
-        float angleVariance = totalAngleVariance/(segmentSize-1);
+        Point2f meanAngleVec = accumulate(angles.begin(), angles.end(), Point2f(0.0,0.0))/(segmentSize-1);
+
+        float meanAngle;
+        // Check for whether the meanAngleVec is significant
+        if (dist(meanAngleVec, Point2f(0,0)) < 0.1) {
+            meanAngle = 0;
+        } else {
+            meanAngle = atan2(meanAngleVec.y, meanAngleVec.x);
+        }
+        angleOffset = meanAngle;
+
+        // Variance and std deviation
+        auto angleVarianceFunc = [meanAngle] (float accumulator, Point2f angleVec){
+            float angle = atan2(angleVec.y, angleVec.x);
+            float x = angleDiff(angle, meanAngle, M_PI);
+            return accumulator + x*x;
+        };
+
+        float varianceSum = accumulate(angles.begin(), angles.end(), 0.0f, angleVarianceFunc);
+
+        float angleVariance = varianceSum/(segmentSize - 1);
         float angleStdDev = sqrt(angleVariance);
-        
-        // TODO Validity check based on the std deviation of the angles
+
+        // Also check the std deviation of the raw angles separately because the above won't catch symmetrical cases.
+        pLine1 = segment1.data_.cbegin();
+        pLine2 = segment2.data_.cbegin();
+        float angleSum = 0;
+        while (pLine1 != segment1.data_.cend()) {
+            float angle1 = wrappi((pLine1++)->angle);
+            float angle2 = wrappi((pLine2++)->angle);
+            angleSum += angleDiff(angle2, angle1, M_PI);
+        }
+        float meanAngleCheck = angleSum/segmentSize;
+
+        pLine1 = segment1.data_.cbegin();
+        pLine2 = segment2.data_.cbegin();
+        float varianceCheckSum = 0;
+        while (pLine1 != segment1.data_.cend()) {
+            float angle1 = wrappi((pLine1++)->angle);
+            float angle2 = wrappi((pLine2++)->angle);
+            varianceCheckSum += angleDiff(angle2 - angle1, meanAngleCheck, M_PI);
+        }
+        float varianceCheck = varianceCheckSum/(segmentSize-1);
+        float angleStdDevCheck = sqrt(varianceCheck);
+
+        angleStdDev = max(angleStdDev, angleStdDevCheck);
 
         // Get the position offset (naive aprproach)
         // 1. Normalize the position vector of each line by doing it WRT the first line in the segment. This makes it translation invariant.
         vector<Point2f> displacements;
-        vector<Point2f> mirroredDisplacements;
 
         pLine1 = segment1.data_.cbegin();
         pLine2 = segment2.data_.cbegin();
@@ -114,7 +134,6 @@ namespace lm {
 
             // Get mirrored displacements by mirroring one segment, ie switching y = x and rotating 180deg
             d2 = Point2f(-d2.y, -d2.x);
-            mirroredDisplacements.push_back(d2 - d1);
 
             pLine1++;
             pLine2++;
@@ -122,31 +141,48 @@ namespace lm {
 
         // 3. Take an average of the displacement vector from each line in segment1 to the corresponding line in segment2
         Point2f avgDisplacement = accumulate(displacements.begin(), displacements.end(), Point2f(0, 0))/(segmentSize-1);
-        Point2f avgMirroredDisplacement = accumulate(mirroredDisplacements.begin(), mirroredDisplacements.end(), Point2f(0, 0))/(segmentSize-1);
-
-        // 4. TODO: Implement validity check based on std dev of displacements
+        // 4. validity check based on std dev of displacements
         // Calculate variance
         float totalPositionVariance = accumulate(displacements.begin(), displacements.end(), 0.0f, [](float accumulator, Point2f pt) {
             return accumulator + pt.x*pt.x + pt.y*pt.y;
         });
-        float totalMirroredPositionVariance = accumulate(mirroredDisplacements.begin(), mirroredDisplacements.end(), 0.0f, [](float accumulator, Point2f pt) {
-            return accumulator + pt.x*pt.x + pt.y*pt.y;
-        });
 
-        float positionVariance;
-        if (totalPositionVariance < totalMirroredPositionVariance) {
-            positionVariance = totalPositionVariance/(segmentSize-1);
-            isFlipped = false;
-        } else {
-            positionVariance = totalMirroredPositionVariance/(segmentSize-1);
-            isFlipped = true;
-        }
-        
+        float positionVariance = totalPositionVariance/(segmentSize-1);
+
         float positionStdDev = sqrt(positionVariance);
 
         positionOffset = avgDisplacement + line2Pos - line1Pos;
 
         if (angleStdDev >= angleThreshold || positionStdDev >= positionThreshold) {
+            status = LM_STATUS_ERROR_MATCH_FAILED;
+        }
+
+        // Make an extra check to catch the edge case that we are looking at a segment which is symmetrical and flipped. Check that the 360deg angle of line 2 and line 1 matches the calculated angle offset
+        // Returns the angle of the line from the the previous point to the point connected to the next line
+        auto getLineAngle = [] (Segment::segment_t::const_iterator pLine) {
+            const KeyLine line1 = *(pLine++);
+            const KeyLine line2 = *(pLine++);
+            LineJoint lj = isJoinedTo(line1, line2, 10);
+            
+            float angle1;
+            Point2f lineVec;
+            if (lj & (1<<LINE_JOINT_1)) {
+                // End of line1 is joined to line2
+                lineVec = line1.getEndPoint() - line1.getStartPoint();
+            } else {
+                // Start of line1 is joined to line2
+                lineVec = line1.getStartPoint() - line1.getEndPoint();
+            }
+            angle1 = atan2(lineVec.y, lineVec.x);
+
+            return angle1;
+        };
+
+        auto pLine = segment1.data().cbegin();
+        float angle1 = getLineAngle(pLine);
+        pLine = segment2.data().cbegin();
+        float angle2 = getLineAngle(pLine);
+        if (abs(angleDiff(angle2-angle1, angleOffset)) > angleThreshold) {
             status = LM_STATUS_ERROR_MATCH_FAILED;
         }
 

@@ -12,6 +12,7 @@ using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {
+    const float ANGLE_ACCURACY = M_PI * 5/180;
 
     void EXPECT_SEGMENT_EQUAL(const Segment& seg1, const Segment& seg2) {
         ASSERT_EQ(true, seg1.data().size() == seg2.data().size());
@@ -265,7 +266,7 @@ namespace lm {
 
         match.computeOffsets();
 
-        EXPECT_NEAR(M_PI_4, match.angleOffset, 1e-5);
+        EXPECT_NEAR(M_PI_4, match.angleOffset, 5e-3);
         
     }
 
@@ -308,7 +309,7 @@ namespace lm {
 
         match.computeOffsets();
 
-        EXPECT_NEAR(M_PI_4, match.angleOffset, 1e-5);
+        EXPECT_NEAR(M_PI_4, match.angleOffset, 5e-3);
         
         Point2f pt1 = match.segment1.data().front().pt;
         Point2f pt2 = match.segment2.data().front().pt;
@@ -331,8 +332,7 @@ namespace lm {
         LmStatus status = match.computeOffsets();
 
         EXPECT_EQ(LM_STATUS_OK, status);
-        EXPECT_NEAR(0, match.angleOffset, 1e-5);
-        EXPECT_EQ(true, match.isFlipped);
+        EXPECT_NEAR(0, angleDiff(match.angleOffset, M_PI), M_PI * 5/180);
     }
 
     void drawMatches(vector<SegmentMatch> matches, InputOutputArray img) {
@@ -379,13 +379,9 @@ namespace lm {
         EXPECT_SEGMENT_EQUAL(*answer2.data().front(), matches[2].segment1);
         EXPECT_SEGMENT_EQUAL(*answer3.data().front(), matches[0].segment1);
 
-        EXPECT_NEAR(0, matches[0].angleOffset, 1e-4);
-        EXPECT_NEAR(0, matches[1].angleOffset, 1e-4);
-        EXPECT_NEAR(0, matches[2].angleOffset, 1e-4);
-
-        EXPECT_EQ(false, matches[0].isFlipped);
-        EXPECT_EQ(false, matches[1].isFlipped);
-        EXPECT_EQ(true, matches[2].isFlipped);
+        EXPECT_NEAR(0, matches[0].angleOffset, ANGLE_ACCURACY);
+        EXPECT_NEAR(0, matches[1].angleOffset, ANGLE_ACCURACY);
+        EXPECT_NEAR(M_PI, matches[2].angleOffset, ANGLE_ACCURACY);
 
         EXPECT_EQ(true, imwriteSuccess);
     }
@@ -424,13 +420,9 @@ namespace lm {
         EXPECT_SEGMENT_EQUAL(*answer2.data().front(), matches[2].segment1);
         EXPECT_SEGMENT_EQUAL(*answer3.data().front(), matches[0].segment1);
 
-        EXPECT_NEAR(-M_PI_4, matches[0].angleOffset, 1e-4);
-        EXPECT_NEAR(-M_PI_4, matches[1].angleOffset, 1e-4);
-        EXPECT_NEAR(-M_PI_4, matches[2].angleOffset, 1e-4);
-
-        EXPECT_EQ(false, matches[0].isFlipped);
-        EXPECT_EQ(false, matches[1].isFlipped);
-        EXPECT_EQ(true, matches[2].isFlipped);
+        EXPECT_NEAR(-M_PI_4, matches[0].angleOffset, ANGLE_ACCURACY);
+        EXPECT_NEAR(-M_PI_4, matches[1].angleOffset, ANGLE_ACCURACY);
+        EXPECT_NEAR(M_PI-M_PI_4, matches[2].angleOffset, ANGLE_ACCURACY);
 
         EXPECT_EQ(true, imwriteSuccess);
     }

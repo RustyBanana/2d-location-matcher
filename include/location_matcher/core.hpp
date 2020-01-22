@@ -20,6 +20,10 @@ namespace lm {
         LINE_JOINT_EE       = 0b111
     };
 
+    const int LINE_JOINT_1 = 2;
+    const int LINE_JOINT_2 = 1;
+    const int LINE_JOINT_JOINED = 0;
+
     inline float dist(cv::Point2f pt1, cv::Point2f pt2) {
         cv::Point2f diff = pt2 - pt1;
         return sqrt(diff.dot(diff));
