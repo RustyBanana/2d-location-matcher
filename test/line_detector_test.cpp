@@ -68,7 +68,7 @@ namespace lm {
     }
 
     TEST_F(LineDetectorTest, longWall){
-        KeyLines lines;
+        vector<KeyLine> lines;
         ld->detect(testImg4_, lines);
 
         EXPECT_KEYLINES_EQUAL(lines4_, lines);     

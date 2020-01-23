@@ -39,29 +39,35 @@ message("Starting 2d-location-matcher build")
 
 find_package(OpenCV REQUIRED)
 
+add_subdirectory(lib/line_descriptor/)
+
 include_directories(
   .
   include
   ${OpenCV_INCLUDE_DIRS}
+  lib/line_descriptor/include/opencv2/
 )
 
 add_library(lm_utils src/utils.cpp)
 target_link_libraries(lm_utils
+  custom_line_descriptor
   ${OpenCV_LIBS}
 )
 
 add_library(line_detector src/line_detector.cpp)
 target_link_libraries(line_detector
-    ${OpenCV_LIBS}
+  custom_line_descriptor
 )
 
 add_library(line_filter src/line_filter.cpp)
 target_link_libraries(line_filter
+  custom_line_descriptor
   ${OpenCV_LIBS}
 )
 
 add_library(segment src/segment.cpp)
 target_link_libraries(segment
+  custom_line_descriptor
   ${OpenCV_LIBS}
   lm_utils
 )

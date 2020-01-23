@@ -4,7 +4,7 @@
 #include <time.h>   // For initializing random
 
 #include "opencv2/core.hpp"
-#include "opencv2/line_descriptor.hpp"
+#include "line_descriptor.hpp"
 
 #include "location_matcher/core.hpp"
 #include "location_matcher/utils.hpp"

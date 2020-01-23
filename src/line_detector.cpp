@@ -28,7 +28,7 @@ namespace lm {
     
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines) {
         cv::Mat mask = cv::Mat::ones(imgIn.size(), CV_8UC1);
-        return detect(imgIn, lines, mask);
+        return this->detect(imgIn, lines, mask);
     }
 
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines, const cv::Mat& mask) {

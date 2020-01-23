@@ -80,13 +80,7 @@ namespace lm {
 
         vector<LocationMatch> locationMatches;
 
-        Mat img = testImg4_.clone();
-        matcher.addBlueprint(bp3_);
-        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
-            matcher.drawMatch(img, *matchItr);
-        }
-
-        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
+        
 
         ASSERT_EQ(3, matches.size());
 
@@ -113,6 +107,13 @@ namespace lm {
         for (int i = 0; i < 3; i++) {
             EXPECT_EQ_LOCATION_MATCH(ansLocationMatches[i], locationMatches[i]);
         }
+
+        Mat img = testImg4_.clone();
+        matcher.addBlueprint(bp3_);
+        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
+            matcher.drawMatch(img, *matchItr);
+        }
+        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
 
     }
 

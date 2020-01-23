@@ -1,5 +1,5 @@
 #pragma once
-#include <opencv2/line_descriptor.hpp>
+#include "line_descriptor.hpp"
 
 #include "location_matcher/core.hpp"
 

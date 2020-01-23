@@ -3,7 +3,7 @@
 // OpenCV2 dependencies
 #include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
-#include <opencv2/line_descriptor.hpp>
+#include <line_descriptor.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 
@@ -11,7 +11,7 @@
 
 #include "location_matcher/core.hpp"
 
-#define USE_LSD_DETECTOR
+//#define USE_LSD_DETECTOR
 
 namespace lm {
 
