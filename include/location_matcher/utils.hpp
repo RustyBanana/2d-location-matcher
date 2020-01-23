@@ -13,4 +13,6 @@ namespace lm {
     LineJoint isJoinedTo(const cv::line_descriptor::KeyLine& line1,
                         const cv::line_descriptor::KeyLine& line2,
                         float distThreshold);
+
+    void drawLines(cv::Mat& output, KeyLines lines);
 }

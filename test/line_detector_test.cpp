@@ -13,29 +13,14 @@ using namespace cv::line_descriptor;
 namespace lm {
     // Tolerance parameters
 
-    class LineDetectorTest : public ::testing::Test{
+    class LineDetectorTest : public BaseTest{
         public:
         LineDetector *ld;
-
-        Mat testImg1_;
-        Mat testImg2_;
-
-        // The actual lines in each image
-        KeyLines lines1_;
-        KeyLines lines2_;
 
         void SetUp() override {
             ld = new LineDetector();
 
-            testImg1_ = imread("test/line-detector-test-1.jpg", IMREAD_GRAYSCALE);
-            testImg2_ = imread("test/line-detector-test-2.jpg", IMREAD_GRAYSCALE);
-
-            lines1_.push_back(getKeyLine(14, 33, 47, 33));
-            lines1_.push_back(getKeyLine(72, 44, 72 ,77));
-
-            lines2_.push_back(getKeyLine(21, 33, 57, 69));
-            lines2_.push_back(getKeyLine(21, 69, 57, 69));
-            lines2_.push_back(getKeyLine(82, 12, 82, 51));
+            BaseTest::SetUp();
         }
     };
 
@@ -45,6 +30,11 @@ namespace lm {
 
         KeyLines lines;
         ld->detect(testImg1_, lines);
+
+        Mat img = testImg1_.clone();
+        drawLines(img, lines);
+        bool imwriteSucess = imwrite("debug/LineDetectorTest_unconnectedLinesUnmasked.jpg", img);
+        EXPECT_EQ(true, imwriteSucess);
 
         EXPECT_KEYLINES_EQUAL(lines1_, lines);
     }
@@ -58,13 +48,47 @@ namespace lm {
         ld->detect(testImg1_, lines, mask);
 
         EXPECT_KEYLINES_EQUAL(KeyLines(lines1_.begin(), lines1_.begin() + 1), lines);
+
+        Mat img = testImg1_.clone();
+        drawLines(img, lines);
+        bool imwriteSucess = imwrite("debug/LineDetectorTest_unconnectedLinesMasked.jpg", img);
+        EXPECT_EQ(true, imwriteSucess);
     }
 
     TEST_F(LineDetectorTest, connectedLinesUnmasked){
         KeyLines lines;
         ld->detect(testImg2_, lines);
 
-        EXPECT_KEYLINES_EQUAL(lines1_, lines);      
+        EXPECT_KEYLINES_EQUAL(lines2_, lines);     
+
+        Mat img = testImg2_.clone();
+        drawLines(img, lines);
+        bool imwriteSucess = imwrite("debug/LineDetectorTest_connectedLinesUnmasked.jpg", img);
+        EXPECT_EQ(true, imwriteSucess); 
+    }
+
+    TEST_F(LineDetectorTest, longWall){
+        KeyLines lines;
+        ld->detect(testImg4_, lines);
+
+        EXPECT_KEYLINES_EQUAL(lines4_, lines);     
+
+        Mat img = testImg4_.clone();
+        drawLines(img, lines);
+        bool imwriteSucess = imwrite("debug/LineDetectorTest_longWall.jpg", img);
+        EXPECT_EQ(true, imwriteSucess); 
+    }
+
+    TEST_F(LineDetectorTest, longWallRot45){
+        KeyLines lines;
+        ld->detect(testImg5_, lines);
+
+        EXPECT_KEYLINES_EQUAL(lines5_, lines);     
+
+        Mat img = testImg5_.clone();
+        drawLines(img, lines);
+        bool imwriteSucess = imwrite("debug/LineDetectorTest_longWallRot45.jpg", img);
+        EXPECT_EQ(true, imwriteSucess); 
     }
 
 }   // namespace lm

@@ -38,12 +38,12 @@ namespace lm {
 #else
         lineDetector_->detect(imgIn, detectedLines, mask );
 #endif
-        float offsetR = 1.6; // Estimation of impact of gaussian kernel smoothing on line position
+        float offsetR = 0.0; // Estimation of impact of gaussian kernel smoothing on line position
         for ( size_t i = 0; i < detectedLines.size(); i++ )
         {
             KeyLine kl = detectedLines[i];
             
-            if( kl.octave == 0 && kl.angle >= 0)
+            if( kl.octave == 0)
             {
 
                 /* get extremes of line */

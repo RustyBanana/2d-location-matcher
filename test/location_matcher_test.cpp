@@ -54,6 +54,22 @@ namespace lm {
         imwrite("debug/LocationMatcher_matchLToLongWall.jpg", img);
     }
 
+    TEST_F(LocationMatcherTest, matchLToLongWallRot45) {
+
+        matcher.addBlueprint(bp3_);
+
+        vector<LocationMatch> matches;
+        matcher.findMatch(testImg5_, matches);
+
+        Mat img = testImg5_.clone();
+
+        for (auto matchItr = matches.cbegin(); matchItr != matches.cend(); matchItr++) {
+            matcher.drawMatch(img, *matchItr);
+        }
+
+        imwrite("debug/LocationMatcher_matchLToLongWallRot45.jpg", img);
+    }
+
     TEST_F(LocationMatcherTest, segmentMatchToLocationMatch) {
         Segments map, bp;
         EXPECT_EQ(LM_STATUS_OK, map.addLines(lines4_));
@@ -63,6 +79,14 @@ namespace lm {
         map.matchSegments(bp, matches);
 
         vector<LocationMatch> locationMatches;
+
+        Mat img = testImg4_.clone();
+        matcher.addBlueprint(bp3_);
+        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
+            matcher.drawMatch(img, *matchItr);
+        }
+
+        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
 
         ASSERT_EQ(3, matches.size());
 
@@ -90,13 +114,6 @@ namespace lm {
             EXPECT_EQ_LOCATION_MATCH(ansLocationMatches[i], locationMatches[i]);
         }
 
-        Mat img = testImg4_.clone();
-        matcher.addBlueprint(bp3_);
-        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
-            matcher.drawMatch(img, *matchItr);
-        }
-
-        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
     }
 
     
