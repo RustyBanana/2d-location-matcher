@@ -96,12 +96,12 @@ namespace lm {
         }
 
         Mat img = testImg4_.clone();
-
+        matcher.addBlueprint(bp4_);
         for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
             matcher.drawMatch(img, *matchItr);
         }
 
-        imwrite("debug/LocationMatcher_matchLToLongWall.jpg", img);
+        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
     }
 
     

@@ -53,7 +53,7 @@ namespace lm {
         const Blueprint& bp = blueprints_.at(match.name);
 
         // Draw the centroid in
-        circle(img, match.position, 5, Scalar(255, 0, 0), 5);
+        circle(img, match.position, 5, Scalar(50, 50, 50), 5);
 
         // Draw the segment in
         /*
