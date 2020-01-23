@@ -11,7 +11,7 @@
 
 #include "location_matcher/core.hpp"
 
-#define USE_LSD_DETECTOR
+//#define USE_LSD_DETECTOR
 
 namespace lm {
 
@@ -28,12 +28,13 @@ namespace lm {
         // Use a mask with the same shape as imgIn, with 1's for pixels to be kept, 0's for pixels to be removed.
         LmStatus detect(const cv::Mat& imgIn, KeyLinesOut lines, const cv::Mat& mask);
 
-        private:
+        LmStatus mergeDuplicates(KeyLines lines);
+
 #ifdef USE_LSD_DETECTOR
         cv::Ptr<cv::line_descriptor::LSDDetector> lineDetector_;
 #else
         cv::line_descriptor::BinaryDescriptor::Params bdParams_;
-        cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;        
+        static cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;        
 #endif
     };
 

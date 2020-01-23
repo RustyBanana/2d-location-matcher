@@ -5,6 +5,10 @@ using namespace cv;
 using namespace cv::line_descriptor;
 
 namespace lm {  
+#ifndef USE_LSD_DETECTOR
+    cv::Ptr<cv::line_descriptor::BinaryDescriptor> LineDetector::lineDetector_ = BinaryDescriptor::createBinaryDescriptor();
+#endif
+
     LineDetector::LineDetector() {
         BinaryDescriptor::Params bdParams;
         bdParams.ksize_ = 5;            // Gaussian kernel size. Higher = less 
@@ -18,12 +22,10 @@ namespace lm {
         lineDetector_ = LSDDetector::createLSDDetector();
 #else
         bdParams_ = bdParams;
-        lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
 #endif
     } 
 
     LineDetector::~LineDetector() {
-        
     }     
     
     LmStatus LineDetector::detect(const cv::Mat& imgIn, KeyLinesOut lines) {
@@ -65,5 +67,9 @@ namespace lm {
             }
         }
         return LM_STATUS_OK;
+    }
+
+    LmStatus mergeDuplicates(KeyLines& lines) {
+        
     }
 } // namespace bzd

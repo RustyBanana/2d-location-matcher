@@ -37,7 +37,7 @@ namespace lm {
         EXPECT_NEAR(ans.position.y, test.position.y, 3.0
         );
     }
-
+/*
     TEST_F(LocationMatcherTest, matchLToLongWall) {
 
         matcher.addBlueprint(bp3_);
@@ -53,6 +53,7 @@ namespace lm {
 
         imwrite("debug/LocationMatcher_matchLToLongWall.jpg", img);
     }
+*/
 
     TEST_F(LocationMatcherTest, matchLToLongWallRot45) {
 
@@ -80,13 +81,6 @@ namespace lm {
 
         vector<LocationMatch> locationMatches;
 
-        Mat img = testImg4_.clone();
-        matcher.addBlueprint(bp3_);
-        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
-            matcher.drawMatch(img, *matchItr);
-        }
-
-        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
 
         ASSERT_EQ(3, matches.size());
 
@@ -114,12 +108,29 @@ namespace lm {
             EXPECT_EQ_LOCATION_MATCH(ansLocationMatches[i], locationMatches[i]);
         }
 
+
+        Mat img = testImg4_.clone();
+        matcher.addBlueprint(bp3_);
+        for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
+            matcher.drawMatch(img, *matchItr);
+        }
+
+        imwrite("debug/LocationMatcher_segmentMatchToLocationMatch.jpg", img);
+
     }
 
     
 }
 
 int main(int argc, char* argv[]) {
+    Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector = cv::line_descriptor::BinaryDescriptor::createBinaryDescriptor();
+    for (int i = 0; i < 1000; i++) {
+        Mat img = imread("test/large_wall_interior2.jpg", IMREAD_GRAYSCALE);
+        vector<KeyLine> lines;
+        lineDetector->detect(img, lines);
+    }
+
+
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
