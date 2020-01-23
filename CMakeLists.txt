@@ -35,6 +35,8 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 ################ G-TEST end ######################
 
+message("Starting 2d-location-matcher build")
+
 find_package(OpenCV REQUIRED)
 
 include_directories(
