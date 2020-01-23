@@ -6,7 +6,7 @@ using namespace cv::line_descriptor;
 
 namespace lm {  
 #ifndef USE_LSD_DETECTOR
-    cv::Ptr<cv::line_descriptor::BinaryDescriptor> LineDetector::lineDetector_ = BinaryDescriptor::createBinaryDescriptor();
+    int LineDetector::numInstances = 0;
 #endif
 
     LineDetector::LineDetector() {
@@ -22,6 +22,10 @@ namespace lm {
         lineDetector_ = LSDDetector::createLSDDetector();
 #else
         bdParams_ = bdParams;
+        if (numInstances == 0) {
+            lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
+            numInstances++;
+        }
 #endif
     } 
 

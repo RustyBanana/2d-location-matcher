@@ -34,7 +34,8 @@ namespace lm {
         cv::Ptr<cv::line_descriptor::LSDDetector> lineDetector_;
 #else
         cv::line_descriptor::BinaryDescriptor::Params bdParams_;
-        static cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;        
+        cv::Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector_;
+        static int numInstances;        
 #endif
     };
 
