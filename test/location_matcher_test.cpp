@@ -17,17 +17,17 @@ namespace lm {
         void SetUp() override {
             BaseTest::SetUp();
 
-            bp4_.blueprintImg = testImg3_;
-            bp4_.centroid = Point2f(56,48);
-            bp4_.name = "L section";
-            bp4_.scale = 0.05;
+            bp3_.blueprintImg = testImg3_;
+            bp3_.centroid = Point2f(56,48);
+            bp3_.name = "L section";
+            bp3_.scale = 0.05;
 
             
         }
 
         LocationMatcher matcher;
 
-        Blueprint bp4_;
+        Blueprint bp3_;
     };
 
     void EXPECT_EQ_LOCATION_MATCH(const LocationMatch& ans, const LocationMatch& test) {
@@ -39,13 +39,8 @@ namespace lm {
     }
 
     TEST_F(LocationMatcherTest, matchLToLongWall) {
-        Blueprint bp1;
-        bp1.blueprintImg = testImg3_;
-        bp1.centroid = Point2f(48, 56);
-        bp1.name = "L section";
-        bp1.scale = 0.05;
 
-        matcher.addBlueprint(bp1);
+        matcher.addBlueprint(bp3_);
 
         vector<LocationMatch> matches;
         matcher.findMatch(testImg4_, matches);
@@ -72,14 +67,14 @@ namespace lm {
         ASSERT_EQ(3, matches.size());
 
         for (int i = 0; i < 3; i++) {
-            locationMatches.push_back(matcher.segmentMatchToLocationMatch(bp4_, matches[i]));
+            locationMatches.push_back(matcher.segmentMatchToLocationMatch(bp3_, matches[i]));
         }
 
         vector<LocationMatch> ansLocationMatches;
         LocationMatch lm1, lm2, lm3;
-        lm1.name = bp4_.name;
-        lm2.name = bp4_.name;
-        lm3.name = bp4_.name;
+        lm1.name = bp3_.name;
+        lm2.name = bp3_.name;
+        lm3.name = bp3_.name;
         lm1.position = Point2f(56, 48);
         lm2.position = Point2f(56, 105);
         lm3.position = Point2f(116, 105);
@@ -96,7 +91,7 @@ namespace lm {
         }
 
         Mat img = testImg4_.clone();
-        matcher.addBlueprint(bp4_);
+        matcher.addBlueprint(bp3_);
         for (auto matchItr = locationMatches.cbegin(); matchItr != locationMatches.cend(); matchItr++) {
             matcher.drawMatch(img, *matchItr);
         }
