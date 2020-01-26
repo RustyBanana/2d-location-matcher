@@ -22,10 +22,7 @@ namespace lm {
         lineDetector_ = LSDDetector::createLSDDetector();
 #else
         bdParams_ = bdParams;
-        if (numInstances == 0) {
-            lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
-            numInstances++;
-        }
+        lineDetector_ = BinaryDescriptor::createBinaryDescriptor(bdParams);
 #endif
     } 
 

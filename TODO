@@ -1,0 +1,11 @@
+Current implementation uses EDLines which is unstable for an unknown reason. Memory corruption error which may be caused by mixing debug and release versions of the library?
+Implementation can be adapted to use LSDLines as well. Current issue with LSDLines is that it does not detect horizontal lines under certain conditions with default parameters. Another issue is that the angle definition used in the returned KeyLines is defined as the perpendicular angle to the line, which is different from the parallel angle to the line that EDLines uses. This implementation is designed for EDLines.
+Both EDLines and LSDLines are prone to finding duplicates of lines (e.g. a single black line will produce a line on the left edge and the right edge). If this method is pursued then these duplicates should be merged to find a more accurate estimate of the central line.
+Alternatively, lines can be extracted directly from the point cloud image using something like PCL library and converted to KeyLine format and fed through this library.
+
+Segment matching has only been tested under certain test cases (in test/)
+Validation of matches need to be implemented to improve false positive rate.
+Current implementation of extracting angle and position of a found match in Segments::computeOffsets() is naive. A better implementation should be developed with time such as by least squares.
+SegmentMatch::computeConfidence() unimplemented.
+
+Segment::compareWith() currently only searches for matches where two or more lines consecutively are matched together. Future implementations might want to consider the case where only a single line is matched together.

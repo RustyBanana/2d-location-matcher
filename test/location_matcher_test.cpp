@@ -123,6 +123,13 @@ namespace lm {
 }
 
 int main(int argc, char* argv[]) {
+    /*
+    Ptr<cv::line_descriptor::BinaryDescriptor> lineDetector = cv::line_descriptor::BinaryDescriptor::createBinaryDescriptor();
+    for (int i = 0; i < 1000; i++) {
+        Mat img = imread("test/large_wall_interior2.jpg", IMREAD_GRAYSCALE);
+        vector<KeyLine> lines;
+        lineDetector->detect(img, lines);
+    }*/
 
 
     InitGoogleTest(&argc, argv);

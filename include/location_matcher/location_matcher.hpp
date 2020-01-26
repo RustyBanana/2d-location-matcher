@@ -8,18 +8,35 @@
 namespace lm {
 
     struct Blueprint {
-        std::string name;
-        cv::Mat blueprintImg;
-        cv::Point2f centroid;
-        float scale;        // metres per pixel (unused ATM)
+        std::string name;       // Identifier
+        cv::Mat blueprintImg;   // Lines are extracted from this image to match against the map
+        cv::Point2f centroid;   // Centroid of blueprintImg
+        float scale;            // metres per pixel (unimplemented currently)
     };
 
     struct LocationMatch {
-        std::string name;
+        std::string name;       // Identifier of blueprint it is matched against
         cv::Point2f position;   // pixel position of the blueprint's centroid in the search image
         double angle;           // Angle by which the blueprint is rotated to fit onto the found match
-        double certainty;
+        double certainty;       // [0, 1] confidence in match (unimplemented currently)
     };
+
+    /*  Typical usage for LocationMatcher
+        // Create blueprints
+        Blueprint bp1;
+        bp1.name = "Long Section";
+        bp1.blueprintImg = imread("path/to/image.jpg", IMREAD_GRAYSCALE);
+        bp1.centroid = Point2f(50, 70);
+        bp1.scale = 0.05;
+
+        // Add blueprint to matcher
+        LocationMatcher matcher;
+        matcher.addBlueprint(bp1);
+
+        // Create storage for matches and find matches in image
+        vector<LocationMatch> matches;
+        matcher.findMatch(map, matches);
+    */
 
     class LocationMatcherTest;
     class LocationMatcher {
@@ -56,8 +73,10 @@ namespace lm {
         // Input: mask of 255 in areas which have been explored and hence cannot contain a line, and 0 in unexplored areas or obstructed areas
         LmStatus filterMatches(const cv::Mat& mask, std::vector<LocationMatch>& matchesInOut);
         
+        // Add blueprint to blueprints_
         LmStatus addBlueprint(const Blueprint& blueprint);
 
+        // Draw matches on to img for debugging purposes
         void drawMatch(cv::Mat img, const LocationMatch& match)  const;
 
         std::map<std::string, Blueprint> blueprints_;
@@ -65,6 +84,7 @@ namespace lm {
         LineDetector lineDetector_;
         LineFilter lineFilter_;
 
+        // Helper function for converting from SegmentMatch used by Segment to a LocationMatch
         LocationMatch segmentMatchToLocationMatch(const Blueprint& blueprint, const SegmentMatch& match) const;
 
         protected:
