@@ -1,3 +1,19 @@
+To build:
+Goto root directory of this repo
+
+Run:
+mkdir build
+cd build
+cmake ..
+make
+
+To run tests:
+Goto root directory of this repo
+
+Run:
+./build/<test_name>
+to check the image output, check debug/
+
 Current implementation uses EDLines which is unstable for an unknown reason. Memory corruption error which may be caused by mixing debug and release versions of the library?
 Implementation can be adapted to use LSDLines as well. Current issue with LSDLines is that it does not detect horizontal lines under certain conditions with default parameters. Another issue is that the angle definition used in the returned KeyLines is defined as the perpendicular angle to the line, which is different from the parallel angle to the line that EDLines uses. This implementation is designed for EDLines.
 Both EDLines and LSDLines are prone to finding duplicates of lines (e.g. a single black line will produce a line on the left edge and the right edge). If this method is pursued then these duplicates should be merged to find a more accurate estimate of the central line.
